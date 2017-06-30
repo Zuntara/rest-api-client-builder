@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestApiClientBuilder.Core", "RestApiBuilder.Core\RestApiClientBuilder.Core.csproj", "{9164FC5D-4FA0-4923-A58E-BF21CDAFA33D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestApiClientBuilder.Owin.OAuth", "RestApiBuilder.Owin.OAuth\RestApiClientBuilder.Owin.OAuth.csproj", "{E3F3A506-BF44-431B-806F-AD7B317618FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestApiClientBuilder.Core.Tests", "RestApiBuilder.Core.Tests\RestApiClientBuilder.Core.Tests.csproj", "{8FB2B7EF-9E74-4F42-8A70-08956E4EA012}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E8E10887-1998-4652-829C-31BA4901758D}"
+	ProjectSection(SolutionItems) = preProject
+		RestApiClientBuilder.nuspec = RestApiClientBuilder.nuspec
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9164FC5D-4FA0-4923-A58E-BF21CDAFA33D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9164FC5D-4FA0-4923-A58E-BF21CDAFA33D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9164FC5D-4FA0-4923-A58E-BF21CDAFA33D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9164FC5D-4FA0-4923-A58E-BF21CDAFA33D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3F3A506-BF44-431B-806F-AD7B317618FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3F3A506-BF44-431B-806F-AD7B317618FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3F3A506-BF44-431B-806F-AD7B317618FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3F3A506-BF44-431B-806F-AD7B317618FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FB2B7EF-9E74-4F42-8A70-08956E4EA012}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FB2B7EF-9E74-4F42-8A70-08956E4EA012}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FB2B7EF-9E74-4F42-8A70-08956E4EA012}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FB2B7EF-9E74-4F42-8A70-08956E4EA012}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
