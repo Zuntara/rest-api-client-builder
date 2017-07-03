@@ -58,10 +58,6 @@
       <Project>{9164fc5d-4fa0-4923-a58e-bf21cdafa33d}</Project>
       <Name>RestApiClientBuilder.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\RestApiClientBuilder.Owin.OAuth2\RestApiClientBuilder.OAuth2.csproj">
-      <Project>{7b71dd35-84f9-4577-bcd4-352dae72237a}</Project>
-      <Name>RestApiClientBuilder.OAuth2</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
