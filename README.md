@@ -2,6 +2,25 @@
 
 This tool will execute web requests to a given REST api and takes care of the formatting of the client of you
 
+# Easy to use
+
+        RestApiCallResult result = await EndpointDefinitions.User.Update  // definition of the call
+                .Post(updatedUserObject)                // method of the call
+                .WithUriArgument("id", idToUpdate)      // arguments in the uri
+                .ExecuteAsync();                        // Execution of the call
+
+        Log.Info($"Call {result.Uri} took {result.Speed}");
+
+        if (result.IsSucceeded) // call was OK
+        {
+            return result.Parse<EnrichedRouteDto[]>();
+        }
+        
+        // call was not OK
+        Log.Error(result.GetErrorMessage());
+        
+        // do error-handling....
+
 # How to install
 
 You can install this package through NuGet:
