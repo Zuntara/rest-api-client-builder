@@ -6,8 +6,8 @@
     <title>$title$</title>
 
     <!-- Authors and owners fixed on PeopleWare n.v. -->
-    <authors>PeopleWare n.v.</authors>
-    <owners>PeopleWare n.v.</owners>
+    <authors>Filip Slaets, PeopleWare n.v.</authors>
+    <owners>Filip Slaets, PeopleWare n.v.</owners>
 
     <licenseUrl>http://opensource.org/licenses/Apache-2.0</licenseUrl>
     <projectUrl>https://github.com/zuntara/rest-api-client-builder</projectUrl>
@@ -45,8 +45,8 @@
     <file src="$OutputPath$$AssemblyName$.xml" target="lib\net45" />
 
     <!-- license information -->
-    <file src="..\..\LICENSE" target="LICENSE" />
-    <file src="..\..\README.md" target="README.md" />
+    <file src="..\README.md" target="README.md" />
+    <file src="..\LICENSE" target="LICENSE" />
   </files>
 
 </package>
