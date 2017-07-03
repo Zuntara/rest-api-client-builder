@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RestApiClientBuilder.Owin.OAuth2
+namespace RestApiClientBuilder.OAuth2
 {
     /// <summary>
     /// Settings for the OAuth2 <see cref="OAuth2ClientCredentialsBehavior"/>

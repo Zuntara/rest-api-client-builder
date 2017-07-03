@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestApiClientBuilder.Core.T
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E8E10887-1998-4652-829C-31BA4901758D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestApiClientBuilder.Owin.OAuth2", "RestApiClientBuilder.Owin.OAuth2\RestApiClientBuilder.Owin.OAuth2.csproj", "{7B71DD35-84F9-4577-BCD4-352DAE72237A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestApiClientBuilder.OAuth2", "RestApiClientBuilder.Owin.OAuth2\RestApiClientBuilder.OAuth2.csproj", "{7B71DD35-84F9-4577-BCD4-352DAE72237A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestApiClientBuilder.OAuth2.Tests", "RestApiClientBuilder.OAuth2.Tests\RestApiClientBuilder.OAuth2.Tests.csproj", "{600785AF-9CBD-43A7-B4B2-9BBEA4A2D1B9}"
 EndProject

@@ -1,7 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RestApiClientBuilder.Core;
-using RestApiClientBuilder.Owin.OAuth2;
 
 namespace RestApiClientBuilder.OAuth2.Tests
 {

@@ -12,7 +12,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCompany("Peopleware N.V.")]
 [assembly: AssemblyProduct("RestApiBuilder.Core")]
 [assembly: AssemblyCopyright("Copyright © Peopleware N.V. 2017")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyTrademark("Peopleware N.V.")]
 [assembly: AssemblyCulture("")]
 [assembly: NeutralResourcesLanguage("en")]
 

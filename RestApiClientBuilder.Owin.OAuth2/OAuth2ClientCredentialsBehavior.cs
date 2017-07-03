@@ -4,7 +4,7 @@ using DotNetOpenAuth.OAuth2;
 using RestApiClientBuilder.Core.Behaviors;
 using RestApiClientBuilder.Core.Interfaces;
 
-namespace RestApiClientBuilder.Owin.OAuth2
+namespace RestApiClientBuilder.OAuth2
 {
     public class OAuth2ClientCredentialsBehavior : BaseBehavior
     {

@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" ?>
+<package>
+  <metadata minClientVersion="2.8">
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+
+    <!-- Authors and owners fixed on PeopleWare n.v. -->
+    <authors>PeopleWare n.v.</authors>
+    <owners>PeopleWare n.v.</owners>
+
+    <licenseUrl>http://opensource.org/licenses/Apache-2.0</licenseUrl>
+    <projectUrl>https://github.com/zuntara/rest-api-builder</projectUrl>
+    <iconUrl>http://peopleware.github.io/net-ppwcode-util-oddsandends/ppwcode_logo.jpg</iconUrl>
+
+    <description>$description$</description>
+
+    <releaseNotes>
+      1.0.0 Initial release RestApiClientBuilder, built against .NET 4.5.
+      2.0.1 OAuth2 Client-credential behavior added
+    </releaseNotes>
+
+    <copyright>Copyright 2017 by PeopleWare n.v.</copyright>
+
+    <tags>PPWCode RestAPI client builder webapi oauth2</tags>
+
+    <!-- expliciet dependencies -->
+    <dependencies>
+      <!-- no dependencies -->
+      <dependency id="Newtonsoft.Json" version="10.0" />
+    </dependencies>
+
+    <!-- explicit references -->
+    <references>
+      <reference file="$AssemblyName$.dll" />
+    </references>
+
+  </metadata>
+
+  <!-- explicit file inclusion -->
+  <files>
+    <!-- assemblies -->
+    <file src="$OutputPath$$AssemblyName$.dll" target="lib\net45" />
+    <file src="$OutputPath$$AssemblyName$.pdb" target="lib\net45" />
+    <file src="$OutputPath$$AssemblyName$.xml" target="lib\net45" />
+
+    <!-- license information -->
+    <file src="..\..\LICENSE" target="LICENSE" />
+    <file src="..\..\NOTICE" target="NOTICE" />
+    <file src="..\..\README.md" target="README.md" />
+  </files>
+
+</package>

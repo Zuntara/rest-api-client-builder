@@ -7,8 +7,8 @@
     <ProjectGuid>{7B71DD35-84F9-4577-BCD4-352DAE72237A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RestApiClientBuilder.Owin.OAuth2</RootNamespace>
-    <AssemblyName>RestApiClientBuilder.Owin.OAuth2</AssemblyName>
+    <RootNamespace>RestApiClientBuilder.OAuth2</RootNamespace>
+    <AssemblyName>RestApiClientBuilder.OAuth2</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -80,6 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="RestApiClientBuilder.Owin.OAuth2.nuspec" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
