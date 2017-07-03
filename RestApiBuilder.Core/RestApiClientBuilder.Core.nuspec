@@ -10,7 +10,7 @@
     <owners>PeopleWare n.v.</owners>
 
     <licenseUrl>http://opensource.org/licenses/Apache-2.0</licenseUrl>
-    <projectUrl>https://github.com/zuntara/rest-api-builder</projectUrl>
+    <projectUrl>https://github.com/zuntara/rest-api-client-builder</projectUrl>
     <iconUrl>http://peopleware.github.io/net-ppwcode-util-oddsandends/ppwcode_logo.jpg</iconUrl>
 
     <description>$description$</description>
