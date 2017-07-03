@@ -17,7 +17,7 @@ namespace RestApiClientBuilder.Core.Tests
             bool errorHandlerCalled = false;
 
             var result = RestApiClientBuilder.Build()
-                .With(definition)
+                .From(definition)
                 .Get()
                 .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
@@ -39,7 +39,7 @@ namespace RestApiClientBuilder.Core.Tests
             bool errorHandlerCalled = false;
 
             var result = RestApiClientBuilder.Build()
-                .With(definition)
+                .From(definition)
                 .Get()
                 .WithUriArgument("id", 100)
                 .WithUriArgument("{value}", 101)
@@ -60,7 +60,7 @@ namespace RestApiClientBuilder.Core.Tests
             var definition = EndpointDefinition.Build(_baseUri, "Routes", "Request/{id}/{value}");
 
             RestApiClientBuilder.Build()
-                .With(definition)
+                .From(definition)
                 .Get()
                 .WithUriArgument("id", 100)
                 .ExecuteAsync().Wait();
@@ -74,7 +74,7 @@ namespace RestApiClientBuilder.Core.Tests
             bool errorHandlerCalled = false;
 
             var result = RestApiClientBuilder.Build()
-                .With(definition)
+                .From(definition)
                 .Get()
                 .WithUriArgument("id", 100)
                 .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
@@ -105,7 +105,7 @@ namespace RestApiClientBuilder.Core.Tests
             };
 
             var result = RestApiClientBuilder.Build()
-                .With(definition)
+                .From(definition)
                 .Get()
                 .WithQueryArgument("model", searchObject)
                 .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
@@ -136,7 +136,7 @@ namespace RestApiClientBuilder.Core.Tests
             };
 
             var result = RestApiClientBuilder.Build()
-                .With(definition)
+                .From(definition)
                 .Post(searchObject)
                 .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
@@ -155,7 +155,7 @@ namespace RestApiClientBuilder.Core.Tests
             var definition = EndpointDefinition.Build(_baseUri, "Routes", "Search");
 
             RestApiClientBuilder.Build()
-                .With(definition)
+                .From(definition)
                 .Post(null)
                 .ExecuteAsync().Wait();
         }
@@ -177,7 +177,7 @@ namespace RestApiClientBuilder.Core.Tests
             };
 
             var result = RestApiClientBuilder.Build()
-                .With(definition)
+                .From(definition)
                 .Post(searchObject)
                 .WithUriArgument("id", 100)
                 .WithUriArgument("{second}", 101)
@@ -209,7 +209,7 @@ namespace RestApiClientBuilder.Core.Tests
             };
 
             var result = RestApiClientBuilder.Build()
-                .With(definition)
+                .From(definition)
                 .Put(searchObject)
                 .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
@@ -228,7 +228,7 @@ namespace RestApiClientBuilder.Core.Tests
             var definition = EndpointDefinition.Build(_baseUri, "Routes", "Search");
 
             RestApiClientBuilder.Build()
-                .With(definition)
+                .From(definition)
                 .Put(null)
                 .ExecuteAsync().Wait();
         }
@@ -250,7 +250,7 @@ namespace RestApiClientBuilder.Core.Tests
             };
 
             var result = RestApiClientBuilder.Build()
-                .With(definition)
+                .From(definition)
                 .Put(searchObject)
                 .WithUriArgument("id", 100)
                 .WithUriArgument("{second}", 101)
@@ -273,7 +273,7 @@ namespace RestApiClientBuilder.Core.Tests
             bool errorHandlerCalled = false;
 
             var result = RestApiClientBuilder.Build()
-                .With(definition)
+                .From(definition)
                 .Delete()
                 .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
@@ -294,7 +294,7 @@ namespace RestApiClientBuilder.Core.Tests
             bool errorHandlerCalled = false;
 
             var result = RestApiClientBuilder.Build()
-                .With(definition)
+                .From(definition)
                 .Get()
                 .WithUriArgument("id", 100)
                 .OnErrorResponse(httpCode => { errorHandlerCalled = true; })

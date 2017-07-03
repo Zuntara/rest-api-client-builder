@@ -148,7 +148,7 @@ namespace RestApiClientBuilder.Core
         /// <returns>fluent api for additional parameters</returns>
         public IRestApiGetDefinition Get()
         {
-            return RestApiClientBuilder.BuildFor(BaseAddress).With(this).Get();
+            return RestApiClientBuilder.BuildFor(BaseAddress).From(this).Get();
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace RestApiClientBuilder.Core
         /// <returns>fluent api for additional parameters</returns>
         public IRestApiMethodDefinition Post(object objectToPost)
         {
-            return RestApiClientBuilder.BuildFor(BaseAddress).With(this).Post(objectToPost);
+            return RestApiClientBuilder.BuildFor(BaseAddress).From(this).Post(objectToPost);
         }
 
         /// <summary>
@@ -168,7 +168,7 @@ namespace RestApiClientBuilder.Core
         /// <returns>fluent api for additional parameters</returns>
         public IRestApiMethodDefinition Put(object objectToPut)
         {
-            return RestApiClientBuilder.BuildFor(BaseAddress).With(this).Put(objectToPut);
+            return RestApiClientBuilder.BuildFor(BaseAddress).From(this).Put(objectToPut);
         }
 
         /// <summary>
@@ -177,7 +177,7 @@ namespace RestApiClientBuilder.Core
         /// <returns>fluent api for additional parameters</returns>
         public IRestApiMethodDefinition Delete()
         {
-            return RestApiClientBuilder.BuildFor(BaseAddress).With(this).Delete();
+            return RestApiClientBuilder.BuildFor(BaseAddress).From(this).Delete();
         }
     }
 }

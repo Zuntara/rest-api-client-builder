@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RestApiClientBuilder.Core.Interfaces;
+using RestApiClientBuilder.Core.Utils;
 
 namespace RestApiClientBuilder.Core
 {
@@ -52,6 +53,10 @@ namespace RestApiClientBuilder.Core
             private int _callTimeOut;
             private object _bodyObject;
 
+            private HttpClient _client;
+
+            private readonly List<IRestBehavior> _behaviors = new List<IRestBehavior>();
+
             public ApiBuilder(Uri baseAddress)
             {
                 if (baseAddress != null)
@@ -60,7 +65,7 @@ namespace RestApiClientBuilder.Core
                 }
             }
 
-            public IRestApiForDefinition With(EndpointDefinition definition)
+            public IRestApiForDefinition From(EndpointDefinition definition)
             {
                 _endpointDefinition = definition;
                 _callTimeOut = 5000;
@@ -71,9 +76,9 @@ namespace RestApiClientBuilder.Core
                 return this;
             }
 
-            public IRestApiForDefinition With(EndpointDefinition definition, int timeoutMs)
+            public IRestApiForDefinition From(EndpointDefinition definition, int timeoutMs)
             {
-                With(definition);
+                From(definition);
                 _callTimeOut = timeoutMs;
                 return this;
             }
@@ -123,11 +128,13 @@ namespace RestApiClientBuilder.Core
                 RestApiCallResult callResult = new RestApiCallResult();
 
                 Stopwatch timer = Stopwatch.StartNew();
-                using (HttpClient client = new HttpClient())
+                using (_client = new HttpClient())
                 {
-                    client.BaseAddress = _baseAddress;
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    _client.BaseAddress = _baseAddress;
+                    _client.DefaultRequestHeaders.Accept.Clear();
+                    _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                    _behaviors.Foreach(b => b.OnClientConfiguration(ref _client, _baseAddress));
 
                     CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(_callTimeOut);
 
@@ -138,16 +145,16 @@ namespace RestApiClientBuilder.Core
                         switch (_httpMethod)
                         {
                             case HttpMethod.Get:
-                                response = await ProcessGetRequestAsync(callResult, client, cancellationTokenSource);
+                                response = await ProcessGetRequestAsync(callResult, _client, cancellationTokenSource);
                                 break;
                             case HttpMethod.Post:
-                                response = await ProcessPostRequestAsync(callResult, client, cancellationTokenSource);
+                                response = await ProcessPostRequestAsync(callResult, _client, cancellationTokenSource);
                                 break;
                             case HttpMethod.Put:
-                                response = await ProcessPutRequestAsync(callResult, client, cancellationTokenSource);
+                                response = await ProcessPutRequestAsync(callResult, _client, cancellationTokenSource);
                                 break;
                             case HttpMethod.Delete:
-                                response = await ProcessDeleteRequestAsync(callResult, client, cancellationTokenSource);
+                                response = await ProcessDeleteRequestAsync(callResult, _client, cancellationTokenSource);
                                 break;
                             default:
                                 throw new InvalidOperationException("HTTP Method not configured properly");
@@ -203,6 +210,16 @@ namespace RestApiClientBuilder.Core
                 return this;
             }
 
+            public IRestApiBuildOperation Behavior(IRestBehavior behavior)
+            {
+                if (!_behaviors.Contains(behavior))
+                {
+                    _behaviors.Add(behavior);
+                }
+
+                return this;
+            }
+
             // Helper methods
 
             private async Task<HttpResponseMessage> ProcessPostRequestAsync(RestApiCallResult callResult, HttpClient client, CancellationTokenSource cancellationTokenSource)
@@ -214,7 +231,11 @@ namespace RestApiClientBuilder.Core
                 string jsonSerialized = JsonConvert.SerializeObject(_bodyObject);
                 HttpContent content = new StringContent(jsonSerialized);
 
-                var response = await client.PostAsync(endpointRelativeUri, content, cancellationTokenSource.Token);
+                HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Post, endpointRelativeUri);
+                request.Content = content;
+                _behaviors.Foreach(b => b.OnRequestCreated(request));
+                var response = await client.SendAsync(request, cancellationTokenSource.Token);
+
                 return response;
             }
 
@@ -227,7 +248,11 @@ namespace RestApiClientBuilder.Core
                 string jsonSerialized = JsonConvert.SerializeObject(_bodyObject);
                 HttpContent content = new StringContent(jsonSerialized);
 
-                var response = await client.PutAsync(endpointRelativeUri, content, cancellationTokenSource.Token);
+                HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Put, endpointRelativeUri);
+                request.Content = content;
+                _behaviors.Foreach(b => b.OnRequestCreated(request));
+                var response = await client.SendAsync(request, cancellationTokenSource.Token);
+
                 return response;
             }
 
@@ -237,7 +262,14 @@ namespace RestApiClientBuilder.Core
 
                 endpointRelativeUri = FillUriParameters(endpointRelativeUri);
                 callResult.Uri = new Uri(_baseAddress, endpointRelativeUri);
-                var response = await client.GetAsync(endpointRelativeUri, HttpCompletionOption.ResponseContentRead, cancellationTokenSource.Token);
+
+                HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, endpointRelativeUri);
+                _behaviors.Foreach(b => b.OnRequestCreated(request));
+                
+                var response = await client.SendAsync(request, HttpCompletionOption.ResponseContentRead,
+                    cancellationTokenSource.Token);
+
+                //var response = await client.GetAsync(endpointRelativeUri, HttpCompletionOption.ResponseContentRead, cancellationTokenSource.Token);
                 return response;
             }
 
@@ -247,7 +279,10 @@ namespace RestApiClientBuilder.Core
 
                 endpointRelativeUri = FillUriParameters(endpointRelativeUri);
                 callResult.Uri = new Uri(_baseAddress, endpointRelativeUri);
-                var response = await client.DeleteAsync(endpointRelativeUri, cancellationTokenSource.Token);
+
+                HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Delete, endpointRelativeUri);
+                _behaviors.Foreach(b => b.OnRequestCreated(request));
+                var response = await client.SendAsync(request, cancellationTokenSource.Token);
                 return response;
             }
 
@@ -276,4 +311,6 @@ namespace RestApiClientBuilder.Core
             }
         }
     }
+
+    
 }

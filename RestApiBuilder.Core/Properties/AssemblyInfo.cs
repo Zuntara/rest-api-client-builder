@@ -29,3 +29,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("2.0.*")]
 [assembly: AssemblyFileVersion("2.0.1")]
 [assembly: InternalsVisibleTo("RestApiClientBuilder.Core.Tests")]
+[assembly: InternalsVisibleTo("RestApiClientBuilder.Owin.OAuth2")]
