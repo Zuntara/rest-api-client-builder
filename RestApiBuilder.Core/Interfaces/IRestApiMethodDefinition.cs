@@ -19,6 +19,28 @@ namespace RestApiClientBuilder.Core.Interfaces
         /// </summary>
         /// <param name="onErrorResponseHandler">Handler to execute when not 200/></param>
         /// <returns>fluent interface for execution</returns>
-        IRestApiExecutor OnErrorResponse(Action<HttpStatusCode> onErrorResponseHandler);
+        IRestApiExecutor OnError(Action<HttpStatusCode> onErrorResponseHandler);
+
+        /// <summary>
+        /// Gets triggered when the statuscode of the call is equal then 200
+        /// </summary>
+        /// <param name="onSuccessResponseHandler">Handler to execute when 200/></param>
+        /// <returns>fluent interface for execution</returns>
+        IRestApiExecutor OnSuccess(Action<HttpStatusCode> onSuccessResponseHandler);
+
+        /// <summary>
+        /// Gets triggered when the statuscode of the call is equal then 200
+        /// </summary>
+        /// <param name="onTimeoutHandler">Handler to execute when the request timed out/></param>
+        /// <returns>fluent interface for execution</returns>
+        IRestApiExecutor OnTimeout(Action onTimeoutHandler);
+
+        /// <summary>
+        /// Defines a behavior for intercepting the building of the call.
+        /// For example to add OAuth2 security
+        /// </summary>
+        /// <param name="behavior"></param>
+        /// <returns></returns>
+        IRestApiExecutor Behavior(IRestBehavior behavior);
     }
 }

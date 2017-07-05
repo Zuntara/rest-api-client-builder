@@ -47,10 +47,11 @@ namespace RestApiClientBuilder.Core
             private EndpointDefinition _endpointDefinition;
             private HttpMethod _httpMethod;
             private Action<HttpStatusCode> _errorHandler;
+            private Action<HttpStatusCode> _successHandler;
+            private Action _timeoutHandler;
             private Dictionary<string, object> _uriArguments;
             private object _getQueryArgument;
             private string _getArgumentName;
-            private int _callTimeOut;
             private object _bodyObject;
 
             private HttpClient _client;
@@ -68,18 +69,10 @@ namespace RestApiClientBuilder.Core
             public IRestApiForDefinition From(EndpointDefinition definition)
             {
                 _endpointDefinition = definition;
-                _callTimeOut = 5000;
                 if (_baseAddress == null)
                 {
                     _baseAddress = definition.BaseAddress;
                 }
-                return this;
-            }
-
-            public IRestApiForDefinition From(EndpointDefinition definition, int timeoutMs)
-            {
-                From(definition);
-                _callTimeOut = timeoutMs;
                 return this;
             }
 
@@ -117,13 +110,37 @@ namespace RestApiClientBuilder.Core
                 return this;
             }
 
-            public IRestApiExecutor OnErrorResponse(Action<HttpStatusCode> onErrorResponseHandler)
+            public IRestApiExecutor OnError(Action<HttpStatusCode> onErrorResponseHandler)
             {
+                if (_errorHandler != null)
+                {
+                    throw new InvalidOperationException("OnError already registered.");
+                }
                 _errorHandler = onErrorResponseHandler;
                 return this;
             }
 
-            public async Task<RestApiCallResult> ExecuteAsync()
+            public IRestApiExecutor OnSuccess(Action<HttpStatusCode> onSuccessResponseHandler)
+            {
+                if (_successHandler != null)
+                {
+                    throw new InvalidOperationException("OnSuccess already registered.");
+                }
+                _successHandler = onSuccessResponseHandler;
+                return this;
+            }
+
+            public IRestApiExecutor OnTimeout(Action onTimeoutHandler)
+            {
+                if (_timeoutHandler != null)
+                {
+                    throw new InvalidOperationException("OnTimeout already registered.");
+                }
+                _timeoutHandler = onTimeoutHandler;
+                return this;
+            }
+
+            public async Task<RestApiCallResult> ExecuteAsync(int timeoutMs = 5000)
             {
                 RestApiCallResult callResult = new RestApiCallResult();
 
@@ -136,7 +153,7 @@ namespace RestApiClientBuilder.Core
 
                     _behaviors.Foreach(b => b.OnClientConfiguration(ref _client, _baseAddress));
 
-                    CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(_callTimeOut);
+                    CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(timeoutMs);
 
                     HttpResponseMessage response;
 
@@ -168,6 +185,14 @@ namespace RestApiClientBuilder.Core
                         return callResult;
                     }
 
+                    if (response == null)
+                    {
+                        _timeoutHandler?.Invoke();
+                        callResult.Errors.Add($"The request is canceled. (timeout = {timeoutMs} ms)");
+                        callResult.Speed = timer.Elapsed;
+                        return callResult;
+                    }
+
                     if (!response.IsSuccessStatusCode)
                     {
                         _errorHandler?.Invoke(response.StatusCode);
@@ -175,6 +200,8 @@ namespace RestApiClientBuilder.Core
                         callResult.Speed = timer.Elapsed;
                         return callResult;
                     }
+
+                    _successHandler?.Invoke(response.StatusCode);
 
                     callResult.IsSucceeded = true;
                     callResult.Content = await response.Content.ReadAsStringAsync();
@@ -220,6 +247,16 @@ namespace RestApiClientBuilder.Core
                 return this;
             }
 
+            IRestApiExecutor IRestApiMethodDefinition.Behavior(IRestBehavior behavior)
+            {
+                if (!_behaviors.Contains(behavior))
+                {
+                    _behaviors.Add(behavior);
+                }
+
+                return this;
+            }
+
             // Helper methods
 
             private async Task<HttpResponseMessage> ProcessPostRequestAsync(RestApiCallResult callResult, HttpClient client, CancellationTokenSource cancellationTokenSource)
@@ -234,9 +271,20 @@ namespace RestApiClientBuilder.Core
                 HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Post, endpointRelativeUri);
                 request.Content = content;
                 _behaviors.Foreach(b => b.OnRequestCreated(request));
-                var response = await client.SendAsync(request, cancellationTokenSource.Token);
 
-                return response;
+                try
+                {
+                    var response = await client.SendAsync(request, cancellationTokenSource.Token);
+                    return response;
+                }
+                catch (TaskCanceledException)
+                {
+                    return null;
+                }
+                finally
+                {
+                    cancellationTokenSource.Dispose();
+                }
             }
 
             private async Task<HttpResponseMessage> ProcessPutRequestAsync(RestApiCallResult callResult, HttpClient client, CancellationTokenSource cancellationTokenSource)
@@ -251,9 +299,20 @@ namespace RestApiClientBuilder.Core
                 HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Put, endpointRelativeUri);
                 request.Content = content;
                 _behaviors.Foreach(b => b.OnRequestCreated(request));
-                var response = await client.SendAsync(request, cancellationTokenSource.Token);
 
-                return response;
+                try
+                {
+                    var response = await client.SendAsync(request, cancellationTokenSource.Token);
+                    return response;
+                }
+                catch (TaskCanceledException)
+                {
+                    return null;
+                }
+                finally
+                {
+                    cancellationTokenSource.Dispose();
+                }
             }
 
             private async Task<HttpResponseMessage> ProcessGetRequestAsync(RestApiCallResult callResult, HttpClient client, CancellationTokenSource cancellationTokenSource)
@@ -265,12 +324,20 @@ namespace RestApiClientBuilder.Core
 
                 HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, endpointRelativeUri);
                 _behaviors.Foreach(b => b.OnRequestCreated(request));
-                
-                var response = await client.SendAsync(request, HttpCompletionOption.ResponseContentRead,
-                    cancellationTokenSource.Token);
 
-                //var response = await client.GetAsync(endpointRelativeUri, HttpCompletionOption.ResponseContentRead, cancellationTokenSource.Token);
-                return response;
+                try
+                {
+                    HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseContentRead, cancellationTokenSource.Token);
+                    return response;
+                }
+                catch (TaskCanceledException)
+                {
+                    return null;
+                }
+                finally
+                {
+                    cancellationTokenSource.Dispose();
+                }
             }
 
             private async Task<HttpResponseMessage> ProcessDeleteRequestAsync(RestApiCallResult callResult, HttpClient client, CancellationTokenSource cancellationTokenSource)
@@ -282,8 +349,19 @@ namespace RestApiClientBuilder.Core
 
                 HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Delete, endpointRelativeUri);
                 _behaviors.Foreach(b => b.OnRequestCreated(request));
-                var response = await client.SendAsync(request, cancellationTokenSource.Token);
-                return response;
+                try
+                {
+                    var response = await client.SendAsync(request, cancellationTokenSource.Token);
+                    return response;
+                }
+                catch (TaskCanceledException)
+                {
+                    return null;
+                }
+                finally
+                {
+                    cancellationTokenSource.Dispose();
+                }
             }
 
             private Uri FillUriParameters(Uri endpointRelativeUri)
@@ -309,8 +387,10 @@ namespace RestApiClientBuilder.Core
                 Uri replacedUri = new Uri(textUri, UriKind.Relative);
                 return replacedUri;
             }
+
+           
         }
     }
 
-    
+
 }

@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Net.Http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+using RestApiClientBuilder.Core.Interfaces;
 using RestApiClientBuilder.Core.Tests.TestObjects;
 
 namespace RestApiClientBuilder.Core.Tests
@@ -78,7 +81,7 @@ namespace RestApiClientBuilder.Core.Tests
 
             var result = definition
                 .Get()
-                .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
+                .OnError(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
 
             Assert.AreEqual(true, errorHandlerCalled);
@@ -87,6 +90,116 @@ namespace RestApiClientBuilder.Core.Tests
             Assert.IsNotNull(result.Errors);
             Assert.AreEqual(1, result.Errors.Count);
             Assert.AreEqual(new Uri(_baseUri, "/api/I/Routes/Search"), result.Uri.ToString());
+        }
+
+        [TestMethod]
+        public void EndpointDefinition_GET_No_Arguments_HandlesCancel()
+        {
+            var definition = EndpointDefinition.Build(_baseUri, "Routes", "Search");
+
+            bool errorHandlerCalled = false;
+            bool cancelHandlerCalled = false;
+
+            var result = definition
+                .Get()
+                .OnError(httpCode => { errorHandlerCalled = true; })
+                .OnTimeout(() => { cancelHandlerCalled = true; })
+                .ExecuteAsync(10).Result;
+
+            Assert.AreEqual(false, errorHandlerCalled);
+            Assert.AreEqual(true, cancelHandlerCalled);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(false, result.IsSucceeded);
+            Assert.IsNotNull(result.Errors);
+            Assert.AreEqual(1, result.Errors.Count);
+            Assert.AreEqual(new Uri(_baseUri, "/api/I/Routes/Search"), result.Uri.ToString());
+        }
+
+        [TestMethod, ExpectedException(typeof(InvalidOperationException))]
+        public void EndpointDefinition_DenyDoubleRegistration_Timeout()
+        {
+            var definition = EndpointDefinition.Build(_baseUri, "Routes", "Search");
+
+            var result = definition
+                .Get()
+                .OnTimeout(() => {  })
+                .OnTimeout(() => {  })
+                .ExecuteAsync(10).Result;
+
+            Assert.IsNotNull(result);
+        }
+
+        [TestMethod, ExpectedException(typeof(InvalidOperationException))]
+        public void EndpointDefinition_DenyDoubleRegistration_Error()
+        {
+            var definition = EndpointDefinition.Build(_baseUri, "Routes", "Search");
+
+            var result = definition
+                .Get()
+                .OnError((c) => { })
+                .OnError((c) => { })
+                .ExecuteAsync(10).Result;
+
+            Assert.IsNotNull(result);
+        }
+
+        [TestMethod, ExpectedException(typeof(InvalidOperationException))]
+        public void EndpointDefinition_DenyDoubleRegistration_Success()
+        {
+            var definition = EndpointDefinition.Build(_baseUri, "Routes", "Search");
+
+            var result = definition
+                .Get()
+                .OnSuccess((c) => { })
+                .OnSuccess((c) => { })
+                .ExecuteAsync(10).Result;
+
+            Assert.IsNotNull(result);
+        }
+
+        [TestMethod]
+        public void EndpointDefinition_GET_No_Arguments_Timeout_HandlesError()
+        {
+            var definition = EndpointDefinition.Build(_baseUri, "Routes", "Search");
+
+            bool errorHandlerCalled = false;
+
+            var result = definition
+                .Get()
+                .OnError(httpCode => { errorHandlerCalled = true; })
+                .ExecuteAsync(10000).Result;
+
+            Assert.AreEqual(true, errorHandlerCalled);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(false, result.IsSucceeded);
+            Assert.IsNotNull(result.Errors);
+            Assert.AreEqual(1, result.Errors.Count);
+            Assert.AreEqual(new Uri(_baseUri, "/api/I/Routes/Search"), result.Uri.ToString());
+        }
+
+        [TestMethod]
+        public void EndpointDefinition_GET_No_Arguments_DefineBehavior()
+        {
+            Mock<IRestBehavior> restBehavior = new Mock<IRestBehavior>();
+
+            var definition = EndpointDefinition.Build(_baseUri, "Routes", "Search");
+
+            bool errorHandlerCalled = false;
+
+            var result = definition
+                .Get()
+                .Behavior(restBehavior.Object)
+                .OnError(httpCode => { errorHandlerCalled = true; })
+                .ExecuteAsync(1000).Result;
+
+            Assert.AreEqual(true, errorHandlerCalled);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(false, result.IsSucceeded);
+            Assert.IsNotNull(result.Errors);
+            Assert.AreEqual(1, result.Errors.Count);
+            Assert.AreEqual(new Uri(_baseUri, "/api/I/Routes/Search"), result.Uri.ToString());
+
+            restBehavior.Verify(b => b.OnRequestCreated(It.IsAny<HttpRequestMessage>()), Times.Once);
         }
 
         [TestMethod]
@@ -107,7 +220,7 @@ namespace RestApiClientBuilder.Core.Tests
 
             var result = definition
                 .Post(searchObject)
-                .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
+                .OnError(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
 
             Assert.AreEqual(true, errorHandlerCalled);
@@ -136,7 +249,7 @@ namespace RestApiClientBuilder.Core.Tests
 
             var result = definition
                 .Put(searchObject)
-                .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
+                .OnError(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
 
             Assert.AreEqual(true, errorHandlerCalled);
@@ -156,7 +269,7 @@ namespace RestApiClientBuilder.Core.Tests
 
             var result = definition
                 .Delete()
-                .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
+                .OnError(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
 
             Assert.AreEqual(true, errorHandlerCalled);

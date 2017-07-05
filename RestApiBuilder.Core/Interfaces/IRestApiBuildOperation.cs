@@ -11,14 +11,6 @@ namespace RestApiClientBuilder.Core.Interfaces
         IRestApiForDefinition From(EndpointDefinition definition);
 
         /// <summary>
-        /// Specify which definition to use for building a call with a specific timeout
-        /// </summary>
-        /// <param name="definition">Definition with basic info in it</param>
-        /// <param name="timeoutMs">Timeout for when the call is aborted</param>
-        /// <returns>fluent api for constructing the rest of the call</returns>
-        IRestApiForDefinition From(EndpointDefinition definition, int timeoutMs);
-
-        /// <summary>
         /// Defines a behavior for intercepting the building of the call.
         /// For example to add OAuth2 security
         /// </summary>

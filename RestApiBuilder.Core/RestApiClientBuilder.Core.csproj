@@ -48,6 +48,7 @@
     <Compile Include="Interfaces\IRestApiMethodDefinition.cs" />
     <Compile Include="Interfaces\IRestBehavior.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Providers\BaseConnectionProvider.cs" />
     <Compile Include="RestApiCallResult.cs" />
     <Compile Include="RestApiClientBuilder.cs" />
     <Compile Include="Utils\ListExtentions.cs" />

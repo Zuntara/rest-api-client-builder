@@ -19,7 +19,7 @@ namespace RestApiClientBuilder.Core.Tests
             var result = RestApiClientBuilder.Build()
                 .From(definition)
                 .Get()
-                .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
+                .OnError(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
 
             Assert.AreEqual(true, errorHandlerCalled);
@@ -43,7 +43,7 @@ namespace RestApiClientBuilder.Core.Tests
                 .Get()
                 .WithUriArgument("id", 100)
                 .WithUriArgument("{value}", 101)
-                .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
+                .OnError(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
 
             Assert.AreEqual(true, errorHandlerCalled);
@@ -77,7 +77,7 @@ namespace RestApiClientBuilder.Core.Tests
                 .From(definition)
                 .Get()
                 .WithUriArgument("id", 100)
-                .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
+                .OnError(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
 
             Assert.AreEqual(true, errorHandlerCalled);
@@ -108,7 +108,7 @@ namespace RestApiClientBuilder.Core.Tests
                 .From(definition)
                 .Get()
                 .WithQueryArgument("model", searchObject)
-                .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
+                .OnError(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
 
             Assert.AreEqual(true, errorHandlerCalled);
@@ -138,7 +138,7 @@ namespace RestApiClientBuilder.Core.Tests
             var result = RestApiClientBuilder.Build()
                 .From(definition)
                 .Post(searchObject)
-                .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
+                .OnError(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
 
             Assert.AreEqual(true, errorHandlerCalled);
@@ -181,7 +181,7 @@ namespace RestApiClientBuilder.Core.Tests
                 .Post(searchObject)
                 .WithUriArgument("id", 100)
                 .WithUriArgument("{second}", 101)
-                .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
+                .OnError(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
 
             Assert.AreEqual(true, errorHandlerCalled);
@@ -211,7 +211,7 @@ namespace RestApiClientBuilder.Core.Tests
             var result = RestApiClientBuilder.Build()
                 .From(definition)
                 .Put(searchObject)
-                .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
+                .OnError(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
 
             Assert.AreEqual(true, errorHandlerCalled);
@@ -254,7 +254,7 @@ namespace RestApiClientBuilder.Core.Tests
                 .Put(searchObject)
                 .WithUriArgument("id", 100)
                 .WithUriArgument("{second}", 101)
-                .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
+                .OnError(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
 
             Assert.AreEqual(true, errorHandlerCalled);
@@ -275,7 +275,7 @@ namespace RestApiClientBuilder.Core.Tests
             var result = RestApiClientBuilder.Build()
                 .From(definition)
                 .Delete()
-                .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
+                .OnError(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
 
             Assert.AreEqual(true, errorHandlerCalled);
@@ -297,7 +297,7 @@ namespace RestApiClientBuilder.Core.Tests
                 .From(definition)
                 .Get()
                 .WithUriArgument("id", 100)
-                .OnErrorResponse(httpCode => { errorHandlerCalled = true; })
+                .OnError(httpCode => { errorHandlerCalled = true; })
                 .ExecuteAsync().Result;
 
             Assert.AreEqual(true, errorHandlerCalled);
