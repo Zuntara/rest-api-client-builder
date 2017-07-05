@@ -18,6 +18,7 @@
     <releaseNotes>
       1.0.0 Initial release RestApiClientBuilder, built against .NET 4.5.
       2.0.1 Portable library build of the core
+      2.1.0 Added extra handlers, connectionprovider and moved timeout to more logical place
     </releaseNotes>
 
     <copyright>Copyright 2017 by PeopleWare n.v.</copyright>

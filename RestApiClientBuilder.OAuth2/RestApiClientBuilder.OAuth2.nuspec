@@ -18,6 +18,7 @@
     <releaseNotes>
       1.0.0 Initial release RestApiClientBuilder, built against .NET 4.5.
       2.0.1 OAuth2 Client-credential behavior added
+      2.1.0 Added Factory for building requests to a REST API secured by OAuth2
     </releaseNotes>
 
     <copyright>Copyright 2017 by PeopleWare n.v.</copyright>
@@ -28,7 +29,7 @@
     <dependencies>
       <!-- no dependencies -->
       <dependency id="Newtonsoft.Json" version="10.0" />
-      <dependency id="RestApiClientBuilder.Core" version="2.0" />
+      <dependency id="RestApiClientBuilder.Core" version="2.1" />
     </dependencies>
 
     <!-- explicit references -->
