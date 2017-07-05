@@ -1,6 +1,6 @@
 # REST API Client Builder for .NET
 
-This tool will execute web requests to a given REST api and takes care of the formatting of the client of you
+This tool will execute web requests to a defined REST api and takes care of the request for you.
 
 # Easy to use
 
@@ -66,6 +66,8 @@ You can install this package through NuGet:
 
 For example:
 
+This example serialized an object to a GET parameter with the **WithQueryArgument** argument.
+
     public class MyUserService : IMyUserService
     {
         public async Task<UserDto[]> SearchUserAsync(UserSearchCriteriaDto searchCriteria)
@@ -92,8 +94,8 @@ For example:
 # Possible actions
 
 You can execute a call in two ways.
-* From the **RestApiClientBuilder** class
-* From the **EndpointDefinition** class
+* From the **RestApiClientBuilder** class = this notation has a few more options
+* From the **EndpointDefinition** class = short hand notation
 
 ## Syntax
 
@@ -106,11 +108,11 @@ Define optional behavior(s)
   
   The OAuth2 package **Install-Package RestApiClientBuilder.OAuth2** does include behaviors that can handle OAuth2 calls on the client.
 
-      .Behavior(IRestBehavior)
+      .Behavior( IRestBehavior )
     
 Define the description of the call
 
-    .From(definition, [timeoutInMilliseconds])
+    .From(definition)
 
 Define the Method of the call
 
@@ -125,13 +127,15 @@ Define arguments of the call
     
     .WithQueryArgument( [variableName], [object] )
     
-Define optional error handling
+Define optional error, timeout and success handling
 
-    .OnErrorResponse(httpCode => { /* handle failed call */ })
+    .OnError(httpCode => { /* handle failed call */ })
+    .OnSuccess(httpCode => { /* handle success call */ })
+    .OnTimeout(() => { /* handle timeout */ })
     
 Execute the call
 
-    .ExecuteAsync()
+    .ExecuteAsync([timoutInMs])
     
 Returns an object of **RestApiCallResult**
 This object contains the Speed and status of the call
