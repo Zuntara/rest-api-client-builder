@@ -19,14 +19,14 @@ namespace RestApiClientBuilder.Core.Interfaces
         /// </summary>
         /// <param name="onErrorResponseHandler">Handler to execute when not 200/></param>
         /// <returns>fluent interface for execution</returns>
-        IRestApiExecutor OnError(Action<HttpStatusCode> onErrorResponseHandler);
+        IRestApiExecutor OnError(Action<int> onErrorResponseHandler);
 
         /// <summary>
         /// Gets triggered when the statuscode of the call is equal then 200
         /// </summary>
         /// <param name="onSuccessResponseHandler">Handler to execute when 200/></param>
         /// <returns>fluent interface for execution</returns>
-        IRestApiExecutor OnSuccess(Action<HttpStatusCode> onSuccessResponseHandler);
+        IRestApiExecutor OnSuccess(Action<int> onSuccessResponseHandler);
 
         /// <summary>
         /// Gets triggered when the statuscode of the call is equal then 200

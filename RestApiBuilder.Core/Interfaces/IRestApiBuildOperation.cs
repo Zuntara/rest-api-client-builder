@@ -1,3 +1,5 @@
+using RestApiClientBuilder.Core.Providers;
+
 namespace RestApiClientBuilder.Core.Interfaces
 {
     public interface IRestApiBuildOperation
@@ -17,5 +19,12 @@ namespace RestApiClientBuilder.Core.Interfaces
         /// <param name="behavior"></param>
         /// <returns></returns>
         IRestApiBuildOperation Behavior(IRestBehavior behavior);
+
+        /// <summary>
+        /// Define another connection provider then the HttpClientConnectionProvider
+        /// </summary>
+        /// <param name="provider">Other provider to use</param>
+        /// <returns></returns>
+        IRestApiBuildOperation UseConnectionProvider(IRestConnectionProvider provider);
     }
 }

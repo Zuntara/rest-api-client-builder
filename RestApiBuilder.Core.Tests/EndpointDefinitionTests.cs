@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Net.Http;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using RestApiClientBuilder.Core.Interfaces;
+using RestApiClientBuilder.Core.Providers;
 using RestApiClientBuilder.Core.Tests.TestObjects;
 
 namespace RestApiClientBuilder.Core.Tests
@@ -199,7 +201,7 @@ namespace RestApiClientBuilder.Core.Tests
             Assert.AreEqual(1, result.Errors.Count);
             Assert.AreEqual(new Uri(_baseUri, "/api/I/Routes/Search"), result.Uri.ToString());
 
-            restBehavior.Verify(b => b.OnRequestCreated(It.IsAny<HttpRequestMessage>()), Times.Once);
+            restBehavior.Verify(b => b.OnRequestCreated(It.IsAny<ConnectionRequest>()), Times.Once);
         }
 
         [TestMethod]

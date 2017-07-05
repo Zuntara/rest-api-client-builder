@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RestApiClientBuilder.Core.Interfaces;
+using RestApiClientBuilder.Core.Providers;
 using RestApiClientBuilder.Core.Utils;
 
 namespace RestApiClientBuilder.Core
@@ -25,7 +26,8 @@ namespace RestApiClientBuilder.Core
         /// <returns>Fluent interface for building the request</returns>
         public static IRestApiBuildOperation Build()
         {
-            return new ApiBuilder(null);
+            BaseConnectionProvider connectionProvider = new HttpClientConnectionProvider();
+            return new ApiBuilder(null, connectionProvider);
         }
 
         /// <summary>
@@ -35,7 +37,8 @@ namespace RestApiClientBuilder.Core
         /// <returns>Fluent interface for building the request</returns>
         public static IRestApiBuildOperation BuildFor(Uri baseAddress)
         {
-            return new ApiBuilder(baseAddress);
+            BaseConnectionProvider connectionProvider = new HttpClientConnectionProvider();
+            return new ApiBuilder(baseAddress, connectionProvider);
         }
 
         /// <summary>
@@ -43,11 +46,12 @@ namespace RestApiClientBuilder.Core
         /// </summary>
         private sealed class ApiBuilder : IBuilderOperations
         {
+            private IRestConnectionProvider _connectionProvider;
             private Uri _baseAddress;
             private EndpointDefinition _endpointDefinition;
             private HttpMethod _httpMethod;
-            private Action<HttpStatusCode> _errorHandler;
-            private Action<HttpStatusCode> _successHandler;
+            private Action<int> _errorHandler;
+            private Action<int> _successHandler;
             private Action _timeoutHandler;
             private Dictionary<string, object> _uriArguments;
             private object _getQueryArgument;
@@ -58,8 +62,9 @@ namespace RestApiClientBuilder.Core
 
             private readonly List<IRestBehavior> _behaviors = new List<IRestBehavior>();
 
-            public ApiBuilder(Uri baseAddress)
+            public ApiBuilder(Uri baseAddress, BaseConnectionProvider connectionProvider)
             {
+                _connectionProvider = connectionProvider;
                 if (baseAddress != null)
                 {
                     _baseAddress = baseAddress;
@@ -110,7 +115,7 @@ namespace RestApiClientBuilder.Core
                 return this;
             }
 
-            public IRestApiExecutor OnError(Action<HttpStatusCode> onErrorResponseHandler)
+            public IRestApiExecutor OnError(Action<int> onErrorResponseHandler)
             {
                 if (_errorHandler != null)
                 {
@@ -120,7 +125,7 @@ namespace RestApiClientBuilder.Core
                 return this;
             }
 
-            public IRestApiExecutor OnSuccess(Action<HttpStatusCode> onSuccessResponseHandler)
+            public IRestApiExecutor OnSuccess(Action<int> onSuccessResponseHandler)
             {
                 if (_successHandler != null)
                 {
@@ -145,68 +150,63 @@ namespace RestApiClientBuilder.Core
                 RestApiCallResult callResult = new RestApiCallResult();
 
                 Stopwatch timer = Stopwatch.StartNew();
-                using (_client = new HttpClient())
+
+                _behaviors.Foreach(b => b.OnClientCreation(_connectionProvider, _baseAddress));
+
+                CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(timeoutMs);
+
+                ConnectionRequestResponse response;
+
+                try
                 {
-                    _client.BaseAddress = _baseAddress;
-                    _client.DefaultRequestHeaders.Accept.Clear();
-                    _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                    _behaviors.Foreach(b => b.OnClientConfiguration(ref _client, _baseAddress));
-
-                    CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(timeoutMs);
-
-                    HttpResponseMessage response;
-
-                    try
+                    switch (_httpMethod)
                     {
-                        switch (_httpMethod)
-                        {
-                            case HttpMethod.Get:
-                                response = await ProcessGetRequestAsync(callResult, _client, cancellationTokenSource);
-                                break;
-                            case HttpMethod.Post:
-                                response = await ProcessPostRequestAsync(callResult, _client, cancellationTokenSource);
-                                break;
-                            case HttpMethod.Put:
-                                response = await ProcessPutRequestAsync(callResult, _client, cancellationTokenSource);
-                                break;
-                            case HttpMethod.Delete:
-                                response = await ProcessDeleteRequestAsync(callResult, _client, cancellationTokenSource);
-                                break;
-                            default:
-                                throw new InvalidOperationException("HTTP Method not configured properly");
-                        }
+                        case HttpMethod.Get:
+                            response = await ProcessGetRequestAsync(callResult, cancellationTokenSource);
+                            break;
+                        case HttpMethod.Post:
+                            response = await ProcessPostRequestAsync(callResult, cancellationTokenSource);
+                            break;
+                        case HttpMethod.Put:
+                            response = await ProcessPutRequestAsync(callResult, cancellationTokenSource);
+                            break;
+                        case HttpMethod.Delete:
+                            response = await ProcessDeleteRequestAsync(callResult, cancellationTokenSource);
+                            break;
+                        default:
+                            throw new InvalidOperationException("HTTP Method not configured properly");
                     }
-                    catch (HttpRequestException httpEx)
-                    {
-                        _errorHandler?.Invoke(HttpStatusCode.Gone);
-                        callResult.Errors.Add(httpEx.InnerException?.Message ?? httpEx.Message);
-                        callResult.Speed = timer.Elapsed;
-                        return callResult;
-                    }
-
-                    if (response == null)
-                    {
-                        _timeoutHandler?.Invoke();
-                        callResult.Errors.Add($"The request is canceled. (timeout = {timeoutMs} ms)");
-                        callResult.Speed = timer.Elapsed;
-                        return callResult;
-                    }
-
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        _errorHandler?.Invoke(response.StatusCode);
-                        callResult.Errors.Add(response.ReasonPhrase);
-                        callResult.Speed = timer.Elapsed;
-                        return callResult;
-                    }
-
-                    _successHandler?.Invoke(response.StatusCode);
-
-                    callResult.IsSucceeded = true;
-                    callResult.Content = await response.Content.ReadAsStringAsync();
-                    callResult.Speed = timer.Elapsed;
                 }
+                catch (HttpRequestException httpEx)
+                {
+                    _errorHandler?.Invoke(0);
+                    callResult.Errors.Add(httpEx.InnerException?.Message ?? httpEx.Message);
+                    callResult.Speed = timer.Elapsed;
+                    return callResult;
+                }
+
+                if (response == null)
+                {
+                    _timeoutHandler?.Invoke();
+                    callResult.Errors.Add($"The request is canceled. (timeout = {timeoutMs} ms)");
+                    callResult.Speed = timer.Elapsed;
+                    return callResult;
+                }
+
+                if (!response.IsSuccess)
+                {
+                    _errorHandler?.Invoke(response.StatusCode);
+                    callResult.Errors.Add(response.ErrorReason);
+                    callResult.Speed = timer.Elapsed;
+                    return callResult;
+                }
+
+                _successHandler?.Invoke(response.StatusCode);
+
+                callResult.IsSucceeded = true;
+                callResult.Content = response.ResponseString;
+                callResult.Speed = timer.Elapsed;
+
                 return callResult;
             }
 
@@ -257,24 +257,28 @@ namespace RestApiClientBuilder.Core
                 return this;
             }
 
+            public IRestApiBuildOperation UseConnectionProvider(IRestConnectionProvider provider)
+            {
+                _connectionProvider = provider;
+                return this;
+            }
+
             // Helper methods
 
-            private async Task<HttpResponseMessage> ProcessPostRequestAsync(RestApiCallResult callResult, HttpClient client, CancellationTokenSource cancellationTokenSource)
+            private async Task<ConnectionRequestResponse> ProcessPostRequestAsync(RestApiCallResult callResult, CancellationTokenSource cancellationTokenSource)
             {
                 Uri endpointRelativeUri = _endpointDefinition.GetUri();
                 endpointRelativeUri = FillUriParameters(endpointRelativeUri);
                 callResult.Uri = new Uri(_baseAddress, endpointRelativeUri);
 
                 string jsonSerialized = JsonConvert.SerializeObject(_bodyObject);
-                HttpContent content = new StringContent(jsonSerialized);
 
-                HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Post, endpointRelativeUri);
-                request.Content = content;
-                _behaviors.Foreach(b => b.OnRequestCreated(request));
+                var connectionRequest = _connectionProvider.CreateRequest(HttpMethod.Post, _baseAddress, endpointRelativeUri, jsonSerialized);
+                _behaviors.Foreach(b => b.OnRequestCreated(connectionRequest));
 
                 try
                 {
-                    var response = await client.SendAsync(request, cancellationTokenSource.Token);
+                    ConnectionRequestResponse response = await _connectionProvider.ProcessRequestAsync(connectionRequest, cancellationTokenSource.Token);
                     return response;
                 }
                 catch (TaskCanceledException)
@@ -287,22 +291,20 @@ namespace RestApiClientBuilder.Core
                 }
             }
 
-            private async Task<HttpResponseMessage> ProcessPutRequestAsync(RestApiCallResult callResult, HttpClient client, CancellationTokenSource cancellationTokenSource)
+            private async Task<ConnectionRequestResponse> ProcessPutRequestAsync(RestApiCallResult callResult, CancellationTokenSource cancellationTokenSource)
             {
                 Uri endpointRelativeUri = _endpointDefinition.GetUri();
                 endpointRelativeUri = FillUriParameters(endpointRelativeUri);
                 callResult.Uri = new Uri(_baseAddress, endpointRelativeUri);
 
                 string jsonSerialized = JsonConvert.SerializeObject(_bodyObject);
-                HttpContent content = new StringContent(jsonSerialized);
 
-                HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Put, endpointRelativeUri);
-                request.Content = content;
-                _behaviors.Foreach(b => b.OnRequestCreated(request));
+                var connectionRequest = _connectionProvider.CreateRequest(HttpMethod.Put, _baseAddress, endpointRelativeUri, jsonSerialized);
+                _behaviors.Foreach(b => b.OnRequestCreated(connectionRequest));
 
                 try
                 {
-                    var response = await client.SendAsync(request, cancellationTokenSource.Token);
+                    ConnectionRequestResponse response = await _connectionProvider.ProcessRequestAsync(connectionRequest, cancellationTokenSource.Token);
                     return response;
                 }
                 catch (TaskCanceledException)
@@ -315,19 +317,19 @@ namespace RestApiClientBuilder.Core
                 }
             }
 
-            private async Task<HttpResponseMessage> ProcessGetRequestAsync(RestApiCallResult callResult, HttpClient client, CancellationTokenSource cancellationTokenSource)
+            private async Task<ConnectionRequestResponse> ProcessGetRequestAsync(RestApiCallResult callResult, CancellationTokenSource cancellationTokenSource)
             {
                 Uri endpointRelativeUri = _endpointDefinition.GetUri(_getArgumentName, _getQueryArgument);
 
                 endpointRelativeUri = FillUriParameters(endpointRelativeUri);
                 callResult.Uri = new Uri(_baseAddress, endpointRelativeUri);
 
-                HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, endpointRelativeUri);
-                _behaviors.Foreach(b => b.OnRequestCreated(request));
+                ConnectionRequest connectionRequest = _connectionProvider.CreateRequest(HttpMethod.Get, _baseAddress, endpointRelativeUri, null);
+                _behaviors.Foreach(b => b.OnRequestCreated(connectionRequest));
 
                 try
                 {
-                    HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseContentRead, cancellationTokenSource.Token);
+                    ConnectionRequestResponse response = await _connectionProvider.ProcessRequestAsync(connectionRequest, cancellationTokenSource.Token);
                     return response;
                 }
                 catch (TaskCanceledException)
@@ -340,18 +342,19 @@ namespace RestApiClientBuilder.Core
                 }
             }
 
-            private async Task<HttpResponseMessage> ProcessDeleteRequestAsync(RestApiCallResult callResult, HttpClient client, CancellationTokenSource cancellationTokenSource)
+            private async Task<ConnectionRequestResponse> ProcessDeleteRequestAsync(RestApiCallResult callResult, CancellationTokenSource cancellationTokenSource)
             {
                 Uri endpointRelativeUri = _endpointDefinition.GetUri();
 
                 endpointRelativeUri = FillUriParameters(endpointRelativeUri);
                 callResult.Uri = new Uri(_baseAddress, endpointRelativeUri);
 
-                HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Delete, endpointRelativeUri);
-                _behaviors.Foreach(b => b.OnRequestCreated(request));
+                var connectionRequest = _connectionProvider.CreateRequest(HttpMethod.Delete, _baseAddress, endpointRelativeUri, null);
+                _behaviors.Foreach(b => b.OnRequestCreated(connectionRequest));
+
                 try
                 {
-                    var response = await client.SendAsync(request, cancellationTokenSource.Token);
+                    ConnectionRequestResponse response = await _connectionProvider.ProcessRequestAsync(connectionRequest, cancellationTokenSource.Token);
                     return response;
                 }
                 catch (TaskCanceledException)
@@ -387,8 +390,6 @@ namespace RestApiClientBuilder.Core
                 Uri replacedUri = new Uri(textUri, UriKind.Relative);
                 return replacedUri;
             }
-
-           
         }
     }
 

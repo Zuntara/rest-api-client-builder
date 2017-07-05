@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using DotNetOpenAuth.OAuth2;
 using RestApiClientBuilder.Core.Behaviors;
 using RestApiClientBuilder.Core.Interfaces;
+using RestApiClientBuilder.Core.Providers;
 
 namespace RestApiClientBuilder.OAuth2
 {
@@ -10,6 +12,11 @@ namespace RestApiClientBuilder.OAuth2
     {
         private readonly ClientCredentialSettings _settings;
 
+        /// <summary>
+        /// Creates a new instance of the behavior that handles OAuth2 client credentials
+        /// </summary>
+        /// <param name="settings">Settings needed for the behavior</param>
+        /// <returns></returns>
         public static IRestBehavior Create(ClientCredentialSettings settings)
         {
             return new OAuth2ClientCredentialsBehavior(settings);
@@ -20,15 +27,27 @@ namespace RestApiClientBuilder.OAuth2
             _settings = settings;
         }
 
-        public override void OnClientConfiguration(ref HttpClient client, Uri baseAddress)
+        public override void OnClientCreation(IRestConnectionProvider provider, Uri baseAddress)
         {
-            UserAgentClient userAgent = GetUserAgent();
+            if (provider is HttpClientConnectionProvider)
+            {
+                provider.OnCreateClient = (hasHandlers) =>
+                {
+                    if (hasHandlers) return null;
 
-            IAuthorizationState authorizationCode = userAgent.GetClientAccessToken();
+                    UserAgentClient userAgent = GetUserAgent();
+                    IAuthorizationState authorizationCode = userAgent.GetClientAccessToken();
 
-            client = new HttpClient(userAgent.CreateAuthorizingHandler(authorizationCode));
-          
-            base.OnClientConfiguration(ref client, baseAddress);
+                    var client = new HttpClient(userAgent.CreateAuthorizingHandler(authorizationCode));
+                    client.BaseAddress = baseAddress;
+                    client.DefaultRequestHeaders.Accept.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                    provider.HasHandlers = true;
+
+                    return client;
+                };
+            }
         }
 
         private AuthorizationServerDescription GetAuthServerDescription()

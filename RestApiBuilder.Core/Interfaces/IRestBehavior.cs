@@ -1,13 +1,13 @@
 using System;
 using System.Net.Http;
+using RestApiClientBuilder.Core.Providers;
 
 namespace RestApiClientBuilder.Core.Interfaces
 {
     public interface IRestBehavior
     {
-        void OnRequestCreated(HttpRequestMessage request);
+        void OnRequestCreated(ConnectionRequest request);
 
-        void OnClientConfiguration(ref HttpClient client, Uri baseAddress);
-
+        void OnClientCreation(IRestConnectionProvider provider, Uri baseAddress);
     }
 }

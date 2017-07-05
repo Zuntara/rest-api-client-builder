@@ -1,5 +1,8 @@
 using System;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+using RestApiClientBuilder.Core.Providers;
 using RestApiClientBuilder.Core.Tests.TestObjects;
 
 namespace RestApiClientBuilder.Core.Tests
@@ -9,14 +12,25 @@ namespace RestApiClientBuilder.Core.Tests
     {
         private Uri _baseUri = new Uri("http://localhost-faulted");
 
+        private Mock<IRestConnectionProvider> GetFaultedConnection()
+        {
+            Mock<IRestConnectionProvider> connectionProviderMock = new Mock<IRestConnectionProvider>();
+            connectionProviderMock.Setup(c => c.ProcessRequestAsync(It.IsAny<ConnectionRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ConnectionRequestResponse { IsSuccess = false, StatusCode = 400 });
+            return connectionProviderMock;
+        }
+
         [TestMethod]
         public void RestApiClientBuilder_GET_No_Arguments_HandlesError()
         {
+            Mock<IRestConnectionProvider> connectionProviderMock = GetFaultedConnection();
+
             var definition = EndpointDefinition.Build(_baseUri, "Routes", "Search");
 
             bool errorHandlerCalled = false;
 
             var result = RestApiClientBuilder.Build()
+                .UseConnectionProvider(connectionProviderMock.Object)
                 .From(definition)
                 .Get()
                 .OnError(httpCode => { errorHandlerCalled = true; })
@@ -34,11 +48,13 @@ namespace RestApiClientBuilder.Core.Tests
         [TestMethod]
         public void RestApiClientBuilder_GET_With_UriArguments_HandlesError()
         {
+            Mock<IRestConnectionProvider> connectionProviderMock = GetFaultedConnection();
             var definition = EndpointDefinition.Build(_baseUri, "Routes", "Request/{id}/{value}");
 
             bool errorHandlerCalled = false;
 
             var result = RestApiClientBuilder.Build()
+                .UseConnectionProvider(connectionProviderMock.Object)
                 .From(definition)
                 .Get()
                 .WithUriArgument("id", 100)
