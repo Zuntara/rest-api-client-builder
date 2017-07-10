@@ -13,7 +13,7 @@ This tool will execute web requests to a defined REST api and takes care of the 
 
         if (result.IsSucceeded) // call was OK
         {
-            return result.Parse<EnrichedRouteDto[]>();
+            return result.Parse<MyOwnObject[]>();
         }
         
         // call was not OK
@@ -26,6 +26,7 @@ This tool will execute web requests to a defined REST api and takes care of the 
 You can install this package through NuGet:
 
 **Install-Package RestApiClientBuilder.Core**
+**Install-Package RestApiClientBuilder.OAuth2**  for integrating OAuth2 (client credentials flow is supported)
 
 # Quick start
 
