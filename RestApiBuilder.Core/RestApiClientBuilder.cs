@@ -147,70 +147,12 @@ namespace RestApiClientBuilder.Core
             {
                 CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(timeoutMs);
                 
-                return await ExecuteAsync(cancellationTokenSource);
+                return await ExecuteAsyncInternal(cancellationTokenSource, true);
             }
 
             public async Task<RestApiCallResult> ExecuteAsync(CancellationTokenSource cancellationTokenSource)
             {
-                RestApiCallResult callResult = new RestApiCallResult();
-
-                Stopwatch timer = Stopwatch.StartNew();
-
-                _behaviors.Foreach(b => b.OnClientCreation(_connectionProvider, _baseAddress));
-
-                ConnectionRequestResponse response;
-
-                try
-                {
-                    switch (_httpMethod)
-                    {
-                        case HttpMethod.Get:
-                            response = await ProcessGetRequestAsync(callResult, cancellationTokenSource);
-                            break;
-                        case HttpMethod.Post:
-                            response = await ProcessPostRequestAsync(callResult, cancellationTokenSource);
-                            break;
-                        case HttpMethod.Put:
-                            response = await ProcessPutRequestAsync(callResult, cancellationTokenSource);
-                            break;
-                        case HttpMethod.Delete:
-                            response = await ProcessDeleteRequestAsync(callResult, cancellationTokenSource);
-                            break;
-                        default:
-                            throw new InvalidOperationException("HTTP Method not configured properly");
-                    }
-                }
-                catch (HttpRequestException httpEx)
-                {
-                    _errorHandler?.Invoke(0);
-                    callResult.Errors.Add(httpEx.InnerException?.Message ?? httpEx.Message);
-                    callResult.Speed = timer.Elapsed;
-                    return callResult;
-                }
-
-                if (response == null)
-                {
-                    _timeoutHandler?.Invoke();
-                    callResult.Errors.Add($"The request is canceled or timeout.");
-                    callResult.Speed = timer.Elapsed;
-                    return callResult;
-                }
-
-                if (!response.IsSuccess)
-                {
-                    _errorHandler?.Invoke(response.StatusCode);
-                    callResult.Errors.Add(response.ErrorReason);
-                    callResult.Speed = timer.Elapsed;
-                    return callResult;
-                }
-
-                _successHandler?.Invoke(response.StatusCode);
-
-                callResult.IsSucceeded = true;
-                callResult.Content = response.ResponseString;
-                callResult.Speed = timer.Elapsed;
-
-                return callResult;
+                return await ExecuteAsyncInternal(cancellationTokenSource, false);
             }
 
             public IRestApiMethodDefinition WithUriArgument(string name, object value)
@@ -268,7 +210,70 @@ namespace RestApiClientBuilder.Core
 
             // Helper methods
 
-            private async Task<ConnectionRequestResponse> ProcessPostRequestAsync(RestApiCallResult callResult, CancellationTokenSource cancellationTokenSource)
+            private async Task<RestApiCallResult> ExecuteAsyncInternal(CancellationTokenSource cancellationTokenSource, bool ownToken)
+            {
+                RestApiCallResult callResult = new RestApiCallResult();
+
+                Stopwatch timer = Stopwatch.StartNew();
+
+                _behaviors.Foreach(b => b.OnClientCreation(_connectionProvider, _baseAddress));
+
+                ConnectionRequestResponse response;
+
+                try
+                {
+                    switch (_httpMethod)
+                    {
+                        case HttpMethod.Get:
+                            response = await ProcessGetRequestAsync(callResult, cancellationTokenSource, ownToken);
+                            break;
+                        case HttpMethod.Post:
+                            response = await ProcessPostRequestAsync(callResult, cancellationTokenSource, ownToken);
+                            break;
+                        case HttpMethod.Put:
+                            response = await ProcessPutRequestAsync(callResult, cancellationTokenSource, ownToken);
+                            break;
+                        case HttpMethod.Delete:
+                            response = await ProcessDeleteRequestAsync(callResult, cancellationTokenSource, ownToken);
+                            break;
+                        default:
+                            throw new InvalidOperationException("HTTP Method not configured properly");
+                    }
+                }
+                catch (HttpRequestException httpEx)
+                {
+                    _errorHandler?.Invoke(0);
+                    callResult.Errors.Add(httpEx.InnerException?.Message ?? httpEx.Message);
+                    callResult.Speed = timer.Elapsed;
+                    return callResult;
+                }
+
+                if (response == null)
+                {
+                    _timeoutHandler?.Invoke();
+                    callResult.Errors.Add($"The request is canceled or timeout.");
+                    callResult.Speed = timer.Elapsed;
+                    return callResult;
+                }
+
+                if (!response.IsSuccess)
+                {
+                    _errorHandler?.Invoke(response.StatusCode);
+                    callResult.Errors.Add(response.ErrorReason);
+                    callResult.Speed = timer.Elapsed;
+                    return callResult;
+                }
+
+                _successHandler?.Invoke(response.StatusCode);
+
+                callResult.IsSucceeded = true;
+                callResult.Content = response.ResponseString;
+                callResult.Speed = timer.Elapsed;
+
+                return callResult;
+            }
+
+            private async Task<ConnectionRequestResponse> ProcessPostRequestAsync(RestApiCallResult callResult, CancellationTokenSource cancellationTokenSource, bool disposeCancellationToken)
             {
                 Uri endpointRelativeUri = _endpointDefinition.GetUri();
                 endpointRelativeUri = FillUriParameters(endpointRelativeUri);
@@ -290,11 +295,14 @@ namespace RestApiClientBuilder.Core
                 }
                 finally
                 {
-                    cancellationTokenSource.Dispose();
+                    if (disposeCancellationToken)
+                    {
+                        cancellationTokenSource.Dispose();
+                    }
                 }
             }
 
-            private async Task<ConnectionRequestResponse> ProcessPutRequestAsync(RestApiCallResult callResult, CancellationTokenSource cancellationTokenSource)
+            private async Task<ConnectionRequestResponse> ProcessPutRequestAsync(RestApiCallResult callResult, CancellationTokenSource cancellationTokenSource, bool disposeCancellationToken)
             {
                 Uri endpointRelativeUri = _endpointDefinition.GetUri();
                 endpointRelativeUri = FillUriParameters(endpointRelativeUri);
@@ -316,11 +324,14 @@ namespace RestApiClientBuilder.Core
                 }
                 finally
                 {
-                    cancellationTokenSource.Dispose();
+                    if (disposeCancellationToken)
+                    {
+                        cancellationTokenSource.Dispose();
+                    }
                 }
             }
 
-            private async Task<ConnectionRequestResponse> ProcessGetRequestAsync(RestApiCallResult callResult, CancellationTokenSource cancellationTokenSource)
+            private async Task<ConnectionRequestResponse> ProcessGetRequestAsync(RestApiCallResult callResult, CancellationTokenSource cancellationTokenSource, bool disposeCancellationToken)
             {
                 Uri endpointRelativeUri = _endpointDefinition.GetUri(_getArgumentName, _getQueryArgument);
 
@@ -341,11 +352,14 @@ namespace RestApiClientBuilder.Core
                 }
                 finally
                 {
-                    cancellationTokenSource.Dispose();
+                    if (disposeCancellationToken)
+                    {
+                        cancellationTokenSource.Dispose();
+                    }
                 }
             }
 
-            private async Task<ConnectionRequestResponse> ProcessDeleteRequestAsync(RestApiCallResult callResult, CancellationTokenSource cancellationTokenSource)
+            private async Task<ConnectionRequestResponse> ProcessDeleteRequestAsync(RestApiCallResult callResult, CancellationTokenSource cancellationTokenSource, bool disposeCancellationToken)
             {
                 Uri endpointRelativeUri = _endpointDefinition.GetUri();
 
@@ -366,7 +380,10 @@ namespace RestApiClientBuilder.Core
                 }
                 finally
                 {
-                    cancellationTokenSource.Dispose();
+                    if (disposeCancellationToken)
+                    {
+                        cancellationTokenSource.Dispose();
+                    }
                 }
             }
 
