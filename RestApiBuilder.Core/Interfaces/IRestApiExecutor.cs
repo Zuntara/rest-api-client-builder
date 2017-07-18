@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RestApiClientBuilder.Core.Interfaces
@@ -13,6 +14,14 @@ namespace RestApiClientBuilder.Core.Interfaces
         /// <returns>Result of the call with error-info included</returns>
         /// <exception cref="ArgumentMissingException">Throwed when an API argument in the uri is missing.</exception>
         Task<RestApiCallResult> ExecuteAsync(int timeoutMs = 5000);
+
+        /// <summary>
+        /// Execute the REST call and return the result of the call in a wrapped object.
+        /// </summary>
+        /// <param name="cts">Cancellation token source (with optional timeout included)</param>
+        /// <returns>Result of the call with error-info included</returns>
+        /// <exception cref="ArgumentMissingException">Throwed when an API argument in the uri is missing.</exception>
+        Task<RestApiCallResult> ExecuteAsync(CancellationTokenSource cts);
 
         /// <summary>
         /// Gets triggered when the statuscode of the call is different then 200

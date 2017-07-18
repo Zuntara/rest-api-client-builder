@@ -1,24 +1,23 @@
-﻿using System;
-using System.Net;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace RestApiClientBuilder.Core.Providers
 {
     /// <summary>
-    /// Base class for a connection provider
+    /// Defines an interface for a connection provider
     /// </summary>
-    public abstract class BaseConnectionProvider : IRestConnectionProvider
+    public interface IRestConnectionProvider
     {
         /// <summary>
         /// True when a custom interception handler is added to the client
         /// </summary>
-        public bool HasHandlers { get; set; }
+        bool HasHandlers { get; set; }
 
         /// <summary>
         /// Called when the client needs to be created
         /// </summary>
-        public Func<bool, object> OnCreateClient { get; set; }
+        Func<bool, object> OnCreateClient { get; set; }
 
         /// <summary>
         /// Called when a request is created
@@ -28,7 +27,7 @@ namespace RestApiClientBuilder.Core.Providers
         /// <param name="endpointRelativeUri">Relative uri for the endpoint</param>
         /// <param name="content">Optional content for body of PUT and POST requests</param>
         /// <returns>Connection request summary data</returns>
-        public abstract ConnectionRequest CreateRequest(HttpMethod method, Uri baseAddress, Uri endpointRelativeUri, string content);
+        ConnectionRequest CreateRequest(HttpMethod method, Uri baseAddress, Uri endpointRelativeUri, string content);
 
         /// <summary>
         /// Executes a request in an async manner.
@@ -36,6 +35,6 @@ namespace RestApiClientBuilder.Core.Providers
         /// <param name="connectionRequest">Request definition to execute</param>
         /// <param name="token">Cancellation token to use when executing</param>
         /// <returns>Response object of the request</returns>
-        public abstract Task<ConnectionRequestResponse> ProcessRequestAsync(ConnectionRequest connectionRequest, CancellationToken token);
+        Task<ConnectionRequestResponse> ProcessRequestAsync(ConnectionRequest connectionRequest, CancellationToken token);
     }
 }

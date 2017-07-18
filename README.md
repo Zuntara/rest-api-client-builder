@@ -136,7 +136,8 @@ Define optional error, timeout and success handling
     
 Execute the call
 
-    .ExecuteAsync([timoutInMs])
+    .ExecuteAsync([timoutInMs])		// timeout default = 5000 ms
+    .ExecuteAsync(CancellationTokenSource)
     
 Returns an object of **RestApiCallResult**
 This object contains the Speed and status of the call

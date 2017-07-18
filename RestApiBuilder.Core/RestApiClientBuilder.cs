@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -147,13 +145,18 @@ namespace RestApiClientBuilder.Core
 
             public async Task<RestApiCallResult> ExecuteAsync(int timeoutMs = 5000)
             {
+                CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(timeoutMs);
+                
+                return await ExecuteAsync(cancellationTokenSource);
+            }
+
+            public async Task<RestApiCallResult> ExecuteAsync(CancellationTokenSource cancellationTokenSource)
+            {
                 RestApiCallResult callResult = new RestApiCallResult();
 
                 Stopwatch timer = Stopwatch.StartNew();
 
                 _behaviors.Foreach(b => b.OnClientCreation(_connectionProvider, _baseAddress));
-
-                CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(timeoutMs);
 
                 ConnectionRequestResponse response;
 
@@ -188,7 +191,7 @@ namespace RestApiClientBuilder.Core
                 if (response == null)
                 {
                     _timeoutHandler?.Invoke();
-                    callResult.Errors.Add($"The request is canceled. (timeout = {timeoutMs} ms)");
+                    callResult.Errors.Add($"The request is canceled or timeout.");
                     callResult.Speed = timer.Elapsed;
                     return callResult;
                 }

@@ -8,6 +8,9 @@ using RestApiClientBuilder.Core.Providers;
 
 namespace RestApiClientBuilder.OAuth2
 {
+    /// <summary>
+    /// Implements the client credential flow of OAuth2
+    /// </summary>
     public class OAuth2ClientCredentialsBehavior : BaseBehavior
     {
         private readonly ClientCredentialSettings _settings;
@@ -22,11 +25,20 @@ namespace RestApiClientBuilder.OAuth2
             return new OAuth2ClientCredentialsBehavior(settings);
         }
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="OAuth2ClientCredentialsBehavior"/>
+        /// </summary>
+        /// <param name="settings"></param>
         private OAuth2ClientCredentialsBehavior(ClientCredentialSettings settings)
         {
             _settings = settings;
         }
 
+        /// <summary>
+        /// Called when a client is being created, typical place to add a handler to the provider for <see cref="IRestConnectionProvider.OnCreateClient"/>
+        /// </summary>
+        /// <param name="provider">Provider used to create requests and clients</param>
+        /// <param name="baseAddress">Base Uri for the requests</param>
         public override void OnClientCreation(IRestConnectionProvider provider, Uri baseAddress)
         {
             if (provider is HttpClientConnectionProvider)
