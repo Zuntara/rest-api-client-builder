@@ -20,6 +20,14 @@ namespace RestApiClientBuilder.Core.Tests
             return connectionProviderMock;
         }
 
+        private Mock<IRestConnectionProvider> GetSuccessConnection()
+        {
+            Mock<IRestConnectionProvider> connectionProviderMock = new Mock<IRestConnectionProvider>();
+            connectionProviderMock.Setup(c => c.ProcessRequestAsync(It.IsAny<ConnectionRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ConnectionRequestResponse { IsSuccess = true, StatusCode = 200 });
+            return connectionProviderMock;
+        }
+
         [TestMethod]
         public void RestApiClientBuilder_GET_No_Arguments_HandlesError()
         {
@@ -322,6 +330,37 @@ namespace RestApiClientBuilder.Core.Tests
             Assert.IsNotNull(result.Errors);
             Assert.AreEqual(1, result.Errors.Count);
             Assert.AreEqual(new Uri(_baseUri, "/api/I/User/100"), result.Uri);
+        }
+
+        [TestMethod]
+        public void RestApiClientBuilder_GET_With_OwnCancellationToken_NotDisposed()
+        {
+            Mock<IRestConnectionProvider> connectionProviderMock = GetSuccessConnection();
+
+            var definition = EndpointDefinition.Build(_baseUri, "Routes", "Search");
+
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(5000);
+
+            bool errorHandlerCalled = false;
+            bool successHandlerCalled = false;
+
+            var result = RestApiClientBuilder.Build()
+                .UseConnectionProvider(connectionProviderMock.Object)
+                .From(definition)
+                .Get()
+                .OnError(httpCode => { errorHandlerCalled = true; })
+                .OnSuccess(httpCode => { successHandlerCalled = true; })
+                .ExecuteAsync(cancellationTokenSource).Result;
+
+            cancellationTokenSource.Cancel();
+
+            Assert.AreEqual(false, errorHandlerCalled);
+            Assert.AreEqual(true, successHandlerCalled);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(true, result.IsSucceeded);
+            Assert.IsNotNull(result.Errors);
+            Assert.AreEqual(0, result.Errors.Count);
+            Assert.AreEqual(new Uri(_baseUri, "/api/I/Routes/Search"), result.Uri);
         }
     }
 }
