@@ -4,10 +4,7 @@ using System.Threading.Tasks;
 
 namespace RestApiClientBuilder.Core.Providers
 {
-    /// <summary>
-    /// Defines an interface for a connection provider
-    /// </summary>
-    public interface IRestConnectionProvider
+    public interface IBaseRestConnectionProvider
     {
         /// <summary>
         /// True when a custom interception handler is added to the client
@@ -36,5 +33,19 @@ namespace RestApiClientBuilder.Core.Providers
         /// <param name="token">Cancellation token to use when executing</param>
         /// <returns>Response object of the request</returns>
         Task<ConnectionRequestResponse> ProcessRequestAsync(ConnectionRequest connectionRequest, CancellationToken token);
+    }
+
+    /// <summary>
+    /// Defines an interface for a connection provider
+    /// </summary>
+    public interface IRestConnectionProvider<TClient> : IBaseRestConnectionProvider
+        where TClient : class
+    {
+        /// <summary>
+        /// Gets called when the headers need to be configured.
+        /// </summary>
+        /// <param name="connectionRequest">Connection request with header data</param>
+        /// <param name="client">The client for the connection. Default: HttpClient</param>
+        void ConfigureHeaders(ConnectionRequest connectionRequest, TClient client);
     }
 }

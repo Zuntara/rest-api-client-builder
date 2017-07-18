@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using RestApiClientBuilder.Core;
 using RestApiClientBuilder.Core.Providers;
+using HttpMethod = RestApiClientBuilder.Core.HttpMethod;
 
 namespace RestApiClientBuilder.OAuth2.Tests
 {
@@ -14,7 +16,7 @@ namespace RestApiClientBuilder.OAuth2.Tests
         [TestMethod]
         public void TestBehaviorSuccess()
         {
-            Mock<IRestConnectionProvider> connectionProviderMock = new Mock<IRestConnectionProvider>();
+            Mock<IRestConnectionProvider<HttpClient>> connectionProviderMock = new Mock<IRestConnectionProvider<HttpClient>>();
 
             connectionProviderMock.Setup(c => c.ProcessRequestAsync(It.IsAny<ConnectionRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ConnectionRequestResponse() { IsSuccess = true, StatusCode = 200 });
@@ -43,7 +45,7 @@ namespace RestApiClientBuilder.OAuth2.Tests
         [TestMethod]
         public void TestBehaviorError()
         {
-            Mock<IRestConnectionProvider> connectionProviderMock = new Mock<IRestConnectionProvider>();
+            Mock<IRestConnectionProvider<HttpClient>> connectionProviderMock = new Mock<IRestConnectionProvider<HttpClient>>();
 
             connectionProviderMock.Setup(c => c.ProcessRequestAsync(It.IsAny<ConnectionRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ConnectionRequestResponse { IsSuccess = false, StatusCode = 400 });
@@ -72,7 +74,7 @@ namespace RestApiClientBuilder.OAuth2.Tests
         [TestMethod]
         public void TestBehaviorTimeout()
         {
-            Mock<IRestConnectionProvider> connectionProviderMock = new Mock<IRestConnectionProvider>();
+            Mock<IRestConnectionProvider<HttpClient>> connectionProviderMock = new Mock<IRestConnectionProvider<HttpClient>>();
 
             connectionProviderMock.Setup(c => c.ProcessRequestAsync(It.IsAny<ConnectionRequest>(), It.IsAny<CancellationToken>()))
                 .Throws<TaskCanceledException>();
@@ -101,7 +103,7 @@ namespace RestApiClientBuilder.OAuth2.Tests
         [TestMethod]
         public void TestBehaviorTimeoutWithToken()
         {
-            Mock<IRestConnectionProvider> connectionProviderMock = new Mock<IRestConnectionProvider>();
+            Mock<IRestConnectionProvider<HttpClient>> connectionProviderMock = new Mock<IRestConnectionProvider<HttpClient>>();
 
             connectionProviderMock.Setup(c => c.ProcessRequestAsync(It.IsAny<ConnectionRequest>(), It.IsAny<CancellationToken>()))
                 .Throws<TaskCanceledException>();
