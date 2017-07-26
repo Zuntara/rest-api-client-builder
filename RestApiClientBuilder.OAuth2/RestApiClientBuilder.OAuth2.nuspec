@@ -20,6 +20,7 @@
       2.0.1 OAuth2 Client-credential behavior added
       2.1.0 Added Factory for building requests to a REST API secured by OAuth2
       2.1.1 Commented the methods and classes
+      2.1.3 Added extra behavior to adjust content-types and content-encodings
     </releaseNotes>
 
     <copyright>Copyright 2017 by PeopleWare n.v.</copyright>
@@ -30,7 +31,7 @@
     <dependencies>
       <!-- no dependencies -->
       <dependency id="Newtonsoft.Json" version="10.0" />
-      <dependency id="RestApiClientBuilder.Core" version="2.1.1" />
+      <dependency id="RestApiClientBuilder.Core" version="2.1.3" />
     </dependencies>
 
     <!-- explicit references -->

@@ -21,6 +21,7 @@
       2.1.0 Added extra handlers, connectionprovider and moved timeout to more logical place
       2.1.1 Added extra overload to supply cancellationtokensource to cancel the requests if needed
       2.1.2 Fixed issue with CancellationTokenSource (issue-1)
+      2.1.3 Added extra behavior to adjust content-types and content-encodings
     </releaseNotes>
 
     <copyright>Copyright 2017 by PeopleWare n.v.</copyright>
