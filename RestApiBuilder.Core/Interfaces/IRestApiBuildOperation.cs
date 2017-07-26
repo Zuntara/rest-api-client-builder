@@ -25,6 +25,6 @@ namespace RestApiClientBuilder.Core.Interfaces
         /// </summary>
         /// <param name="provider">Other provider to use</param>
         /// <returns></returns>
-        IRestApiBuildOperation UseConnectionProvider(IRestConnectionProvider provider);
+        IRestApiBuildOperation UseConnectionProvider<TClient>(IRestConnectionProvider<TClient> provider) where TClient : class;
     }
 }

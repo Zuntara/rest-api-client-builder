@@ -39,7 +39,7 @@ namespace RestApiClientBuilder.OAuth2
         /// </summary>
         /// <param name="provider">Provider used to create requests and clients</param>
         /// <param name="baseAddress">Base Uri for the requests</param>
-        public override void OnClientCreation(IRestConnectionProvider provider, Uri baseAddress)
+        public override void OnClientCreation(IBaseRestConnectionProvider provider, Uri baseAddress)
         {
             if (provider is HttpClientConnectionProvider)
             {
@@ -50,14 +50,18 @@ namespace RestApiClientBuilder.OAuth2
                     UserAgentClient userAgent = GetUserAgent();
                     IAuthorizationState authorizationCode = userAgent.GetClientAccessToken();
 
-                    var client = new HttpClient(userAgent.CreateAuthorizingHandler(authorizationCode));
-                    client.BaseAddress = baseAddress;
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    if (provider is IRestConnectionProvider<HttpClient>)
+                    {
+                        var client = new HttpClient(userAgent.CreateAuthorizingHandler(authorizationCode));
+                        client.BaseAddress = baseAddress;
+                        client.DefaultRequestHeaders.Accept.Clear();
+                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                    provider.HasHandlers = true;
+                        provider.HasHandlers = true;
 
-                    return client;
+                        return client;
+                    }
+                    throw new NotSupportedException("Clients other then HttpClient is not (yet) supported.");
                 };
             }
         }

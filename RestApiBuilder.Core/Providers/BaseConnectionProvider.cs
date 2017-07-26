@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,7 +7,8 @@ namespace RestApiClientBuilder.Core.Providers
     /// <summary>
     /// Base class for a connection provider
     /// </summary>
-    public abstract class BaseConnectionProvider : IRestConnectionProvider
+    public abstract class BaseConnectionProvider<TClient> : IRestConnectionProvider<TClient>
+        where TClient : class
     {
         /// <summary>
         /// True when a custom interception handler is added to the client
@@ -19,6 +19,13 @@ namespace RestApiClientBuilder.Core.Providers
         /// Called when the client needs to be created
         /// </summary>
         public Func<bool, object> OnCreateClient { get; set; }
+
+        /// <summary>
+        /// Gets called when the headers need to be configured.
+        /// </summary>
+        /// <param name="connectionRequest">Connection request with header data</param>
+        /// <param name="client">The client for the connection. Default: HttpClient</param>
+        public abstract void ConfigureHeaders(ConnectionRequest connectionRequest, TClient client);
 
         /// <summary>
         /// Called when a request is created

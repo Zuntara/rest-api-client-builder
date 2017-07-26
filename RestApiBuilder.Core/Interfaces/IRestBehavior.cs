@@ -8,6 +8,6 @@ namespace RestApiClientBuilder.Core.Interfaces
     {
         void OnRequestCreated(ConnectionRequest request);
 
-        void OnClientCreation(IRestConnectionProvider provider, Uri baseAddress);
+        void OnClientCreation(IBaseRestConnectionProvider provider, Uri baseAddress);
     }
 }

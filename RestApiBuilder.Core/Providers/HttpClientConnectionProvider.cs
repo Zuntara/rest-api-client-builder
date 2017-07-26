@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -9,7 +11,7 @@ namespace RestApiClientBuilder.Core.Providers
     /// <summary>
     /// Implementation that uses a HttpClient object to do the connections
     /// </summary>
-    public class HttpClientConnectionProvider : BaseConnectionProvider
+    public class HttpClientConnectionProvider : BaseConnectionProvider<HttpClient>
     {
         private static HttpClient _httpClient;
 
@@ -21,11 +23,47 @@ namespace RestApiClientBuilder.Core.Providers
             OnCreateClient = (hasHandlers) =>
             {
                 var client = new HttpClient();
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 HasHandlers = false;
                 return client;
             };
+        }
+
+        public override void ConfigureHeaders(ConnectionRequest connectionRequest, HttpClient client)
+        {
+            if (connectionRequest.HeaderAcceptContentTypes != null)
+            {
+                client.DefaultRequestHeaders.Accept.Clear();
+                foreach (string acceptContentType in connectionRequest.HeaderAcceptContentTypes)
+                {
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(acceptContentType));
+                }
+            }
+
+            if (connectionRequest.HeaderAcceptEncodings != null)
+            {
+                client.DefaultRequestHeaders.AcceptEncoding.Clear();
+                foreach (string acceptEncoding in connectionRequest.HeaderAcceptEncodings)
+                {
+                    client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue(acceptEncoding));
+                }
+            }
+        }
+
+        private void ConfigureHeaders(ConnectionRequest connectionRequest, HttpContent content)
+        {
+            if (connectionRequest.HeaderAcceptContentTypes != null)
+            {
+                content.Headers.ContentType = new MediaTypeWithQualityHeaderValue(connectionRequest.HeaderAcceptContentTypes.First());
+            }
+
+            if (connectionRequest.HeaderAcceptEncodings != null)
+            {
+                content.Headers.ContentEncoding.Clear();
+                foreach (string acceptEncoding in connectionRequest.HeaderAcceptEncodings)
+                {
+                    content.Headers.ContentEncoding.Add(acceptEncoding);
+                }
+            }
         }
 
         /// <summary>
@@ -57,6 +95,8 @@ namespace RestApiClientBuilder.Core.Providers
         {
             _httpClient = (HttpClient)OnCreateClient(HasHandlers);
 
+            ConfigureHeaders(connectionRequest, _httpClient);
+
             _httpClient.BaseAddress = connectionRequest.BaseAddress;
 
             if (connectionRequest.Method == HttpMethod.Post)
@@ -66,13 +106,15 @@ namespace RestApiClientBuilder.Core.Providers
                 HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Post, connectionRequest.RelativeUri);
                 request.Content = content;
 
+                ConfigureHeaders(connectionRequest, request.Content);
+
                 HttpResponseMessage response = await _httpClient.SendAsync(request, token);
-                
+
                 return new ConnectionRequestResponse
                 {
                     IsSuccess = response.IsSuccessStatusCode,
                     ResponseString = response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : null,
-                    StatusCode = (int) response.StatusCode,
+                    StatusCode = (int)response.StatusCode,
                     ErrorReason = !response.IsSuccessStatusCode ? response.ReasonPhrase : null
                 };
             }
@@ -82,6 +124,8 @@ namespace RestApiClientBuilder.Core.Providers
 
                 HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Put, connectionRequest.RelativeUri);
                 request.Content = content;
+
+                ConfigureHeaders(connectionRequest, request.Content);
 
                 HttpResponseMessage response = await _httpClient.SendAsync(request, token);
 
@@ -95,7 +139,7 @@ namespace RestApiClientBuilder.Core.Providers
             }
             if (connectionRequest.Method == HttpMethod.Get)
             {
-                HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get,  connectionRequest.RelativeUri);
+                HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, connectionRequest.RelativeUri);
 
                 HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead, token);
 

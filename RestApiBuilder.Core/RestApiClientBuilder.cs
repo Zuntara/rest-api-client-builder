@@ -24,7 +24,7 @@ namespace RestApiClientBuilder.Core
         /// <returns>Fluent interface for building the request</returns>
         public static IRestApiBuildOperation Build()
         {
-            BaseConnectionProvider connectionProvider = new HttpClientConnectionProvider();
+            IBaseRestConnectionProvider connectionProvider = new HttpClientConnectionProvider();
             return new ApiBuilder(null, connectionProvider);
         }
 
@@ -35,16 +35,16 @@ namespace RestApiClientBuilder.Core
         /// <returns>Fluent interface for building the request</returns>
         public static IRestApiBuildOperation BuildFor(Uri baseAddress)
         {
-            BaseConnectionProvider connectionProvider = new HttpClientConnectionProvider();
+            IBaseRestConnectionProvider connectionProvider = new HttpClientConnectionProvider();
             return new ApiBuilder(baseAddress, connectionProvider);
         }
 
         /// <summary>
         /// Builder class for creating the REST call
         /// </summary>
-        private sealed class ApiBuilder : IBuilderOperations
+        private sealed class ApiBuilder : IBuilderOperations 
         {
-            private IRestConnectionProvider _connectionProvider;
+            private IBaseRestConnectionProvider _connectionProvider;
             private Uri _baseAddress;
             private EndpointDefinition _endpointDefinition;
             private HttpMethod _httpMethod;
@@ -60,7 +60,7 @@ namespace RestApiClientBuilder.Core
 
             private readonly List<IRestBehavior> _behaviors = new List<IRestBehavior>();
 
-            public ApiBuilder(Uri baseAddress, BaseConnectionProvider connectionProvider)
+            public ApiBuilder(Uri baseAddress, IBaseRestConnectionProvider connectionProvider)
             {
                 _connectionProvider = connectionProvider;
                 if (baseAddress != null)
@@ -202,7 +202,8 @@ namespace RestApiClientBuilder.Core
                 return this;
             }
 
-            public IRestApiBuildOperation UseConnectionProvider(IRestConnectionProvider provider)
+            public IRestApiBuildOperation UseConnectionProvider<TClient>(IRestConnectionProvider<TClient> provider)
+                where TClient : class
             {
                 _connectionProvider = provider;
                 return this;
