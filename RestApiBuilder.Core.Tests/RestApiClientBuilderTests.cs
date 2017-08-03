@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -23,9 +25,9 @@ namespace RestApiClientBuilder.Core.Tests
             return connectionProviderMock;
         }
 
-        private Mock<IRestConnectionProvider<HttpClient>> GetSuccessConnection()
+        private Mock<HttpClientConnectionProvider> GetSuccessConnection()
         {
-            Mock<IRestConnectionProvider<HttpClient>> connectionProviderMock = new Mock<IRestConnectionProvider<HttpClient>>();
+            Mock<HttpClientConnectionProvider> connectionProviderMock = new Mock<HttpClientConnectionProvider>();
             connectionProviderMock.Setup(c => c.ProcessRequestAsync(It.IsAny<ConnectionRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ConnectionRequestResponse { IsSuccess = true, StatusCode = 200 });
             return connectionProviderMock;
@@ -65,7 +67,7 @@ namespace RestApiClientBuilder.Core.Tests
                 .Callback<ConnectionRequest, CancellationToken>((conn, ct) =>
                 {
                     connectionProviderMock.Object.ConfigureHeaders(conn, null);
-                }).ReturnsAsync(new ConnectionRequestResponse {IsSuccess = false, StatusCode = 400});
+                }).ReturnsAsync(new ConnectionRequestResponse { IsSuccess = false, StatusCode = 400 });
 
             connectionProviderMock.Setup(p => p.CreateRequest(It.IsAny<HttpMethod>(), It.IsAny<Uri>(), It.IsAny<Uri>(), It.IsAny<string>()))
                 .Returns(new ConnectionRequest());
@@ -383,7 +385,7 @@ namespace RestApiClientBuilder.Core.Tests
         [TestMethod]
         public void RestApiClientBuilder_GET_With_OwnCancellationToken_NotDisposed()
         {
-            Mock<IRestConnectionProvider<HttpClient>> connectionProviderMock = GetSuccessConnection();
+            Mock<HttpClientConnectionProvider> connectionProviderMock = GetSuccessConnection();
 
             var definition = EndpointDefinition.Build(_baseUri, "Routes", "Search");
 
@@ -409,6 +411,59 @@ namespace RestApiClientBuilder.Core.Tests
             Assert.IsNotNull(result.Errors);
             Assert.AreEqual(0, result.Errors.Count);
             Assert.AreEqual(new Uri(_baseUri, "/api/I/Routes/Search"), result.Uri);
+        }
+
+        [TestMethod]
+        public void RestApiClientBuilder_GET_With_ReturnsErrorCode()
+        {
+            Mock<HttpClientConnectionProvider> connectionProviderMock = GetSuccessConnection();
+            connectionProviderMock
+                .Setup(p => p.ProcessRequestAsync(It.IsAny<ConnectionRequest>(), It.IsAny<CancellationToken>()))
+                .CallBase();
+
+            connectionProviderMock
+                .Setup(p => p.CreateRequest(It.IsAny<HttpMethod>(), It.IsAny<Uri>(), It.IsAny<Uri>(),
+                    It.IsAny<string>())).Returns(new ConnectionRequest
+                    {
+                        Method = HttpMethod.Get,
+                        BaseAddress = new Uri("http://localhost"),
+                        RelativeUri = new Uri("/api", UriKind.Relative)
+                    });
+
+            connectionProviderMock.Setup(p => p.ExecuteHttpCallAsync(It.IsAny<CancellationToken>(), It.IsAny<HttpCompletionOption>(), It.IsAny<HttpRequestMessage>()))
+                .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.NotFound) {Content = new StringContent("Test Message")});
+
+            var mocked = connectionProviderMock.Object;
+
+            var definition = EndpointDefinition.Build(_baseUri, "Routes", "Search");
+
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(5000);
+
+            bool errorHandlerCalled = false;
+            bool successHandlerCalled = false;
+
+            var result = RestApiClientBuilder.Build()
+                .UseConnectionProvider(mocked)
+                .From(definition)
+                .Get()
+                .OnError(httpCode => { errorHandlerCalled = true; })
+                .OnSuccess(httpCode => { successHandlerCalled = true; })
+                .ExecuteAsync(cancellationTokenSource).Result;
+
+            cancellationTokenSource.Cancel();
+
+            Assert.AreEqual(true, errorHandlerCalled);
+            Assert.AreEqual(false, successHandlerCalled);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(false, result.IsSucceeded);
+            Assert.IsNotNull(result.Errors);
+            Assert.AreEqual(1, result.Errors.Count);
+            Assert.AreEqual("Test Message", result.Errors.First());
+            Assert.AreEqual(new Uri(_baseUri, "/api/I/Routes/Search"), result.Uri);
+
+
+
+
         }
     }
 }

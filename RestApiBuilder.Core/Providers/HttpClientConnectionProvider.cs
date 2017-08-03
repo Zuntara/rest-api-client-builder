@@ -108,14 +108,14 @@ namespace RestApiClientBuilder.Core.Providers
 
                 ConfigureHeaders(connectionRequest, request.Content);
 
-                HttpResponseMessage response = await _httpClient.SendAsync(request, token);
+                HttpResponseMessage response = await ExecuteHttpCallAsync(token, request);
 
                 return new ConnectionRequestResponse
                 {
                     IsSuccess = response.IsSuccessStatusCode,
                     ResponseString = response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : null,
                     StatusCode = (int)response.StatusCode,
-                    ErrorReason = !response.IsSuccessStatusCode ? response.ReasonPhrase : null
+                    ErrorReason = await ResolveErrorReasonAsync(response)
                 };
             }
             if (connectionRequest.Method == HttpMethod.Put)
@@ -127,45 +127,62 @@ namespace RestApiClientBuilder.Core.Providers
 
                 ConfigureHeaders(connectionRequest, request.Content);
 
-                HttpResponseMessage response = await _httpClient.SendAsync(request, token);
+                HttpResponseMessage response = await ExecuteHttpCallAsync(token, request);
 
                 return new ConnectionRequestResponse
                 {
                     IsSuccess = response.IsSuccessStatusCode,
                     ResponseString = response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : null,
                     StatusCode = (int)response.StatusCode,
-                    ErrorReason = !response.IsSuccessStatusCode ? response.ReasonPhrase : null
+                    ErrorReason = await ResolveErrorReasonAsync(response)
                 };
             }
             if (connectionRequest.Method == HttpMethod.Get)
             {
                 HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, connectionRequest.RelativeUri);
 
-                HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead, token);
+                HttpResponseMessage response = await ExecuteHttpCallAsync(token, HttpCompletionOption.ResponseContentRead, request);
 
                 return new ConnectionRequestResponse
                 {
                     IsSuccess = response.IsSuccessStatusCode,
                     ResponseString = response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : null,
                     StatusCode = (int)response.StatusCode,
-                    ErrorReason = !response.IsSuccessStatusCode ? response.ReasonPhrase : null
+                    ErrorReason = await ResolveErrorReasonAsync(response)
                 };
             }
             if (connectionRequest.Method == HttpMethod.Delete)
             {
                 HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Delete, connectionRequest.RelativeUri);
 
-                HttpResponseMessage response = await _httpClient.SendAsync(request, token);
+                HttpResponseMessage response = await ExecuteHttpCallAsync(token, request);
 
                 return new ConnectionRequestResponse
                 {
                     IsSuccess = response.IsSuccessStatusCode,
                     ResponseString = response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : null,
                     StatusCode = (int)response.StatusCode,
-                    ErrorReason = !response.IsSuccessStatusCode ? response.ReasonPhrase : null
+                    ErrorReason = await ResolveErrorReasonAsync(response)
                 };
             }
             return null;
+        }
+
+        public virtual async Task<HttpResponseMessage> ExecuteHttpCallAsync(CancellationToken token, HttpRequestMessage request)
+        {
+            HttpResponseMessage response = await _httpClient.SendAsync(request, token);
+            return response;
+        }
+
+        public virtual async Task<HttpResponseMessage> ExecuteHttpCallAsync(CancellationToken token, HttpCompletionOption httpCompletionOption, HttpRequestMessage request)
+        {
+            HttpResponseMessage response = await _httpClient.SendAsync(request, httpCompletionOption, token);
+            return response;
+        }
+
+        private async Task<string> ResolveErrorReasonAsync(HttpResponseMessage response)
+        {
+            return !response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : null;
         }
     }
 }
