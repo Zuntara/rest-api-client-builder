@@ -115,7 +115,7 @@ namespace RestApiClientBuilder.Core.Providers
                     IsSuccess = response.IsSuccessStatusCode,
                     ResponseString = response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : null,
                     StatusCode = (int)response.StatusCode,
-                    ErrorReason = await ResolveErrorReasonAsync(response)
+                    ErrorReason = await ResolveErrorReasonAsync(connectionRequest.RelativeUri, response)
                 };
             }
             if (connectionRequest.Method == HttpMethod.Put)
@@ -134,7 +134,7 @@ namespace RestApiClientBuilder.Core.Providers
                     IsSuccess = response.IsSuccessStatusCode,
                     ResponseString = response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : null,
                     StatusCode = (int)response.StatusCode,
-                    ErrorReason = await ResolveErrorReasonAsync(response)
+                    ErrorReason = await ResolveErrorReasonAsync(connectionRequest.RelativeUri, response)
                 };
             }
             if (connectionRequest.Method == HttpMethod.Get)
@@ -148,7 +148,7 @@ namespace RestApiClientBuilder.Core.Providers
                     IsSuccess = response.IsSuccessStatusCode,
                     ResponseString = response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : null,
                     StatusCode = (int)response.StatusCode,
-                    ErrorReason = await ResolveErrorReasonAsync(response)
+                    ErrorReason = await ResolveErrorReasonAsync(connectionRequest.RelativeUri, response)
                 };
             }
             if (connectionRequest.Method == HttpMethod.Delete)
@@ -162,7 +162,7 @@ namespace RestApiClientBuilder.Core.Providers
                     IsSuccess = response.IsSuccessStatusCode,
                     ResponseString = response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : null,
                     StatusCode = (int)response.StatusCode,
-                    ErrorReason = await ResolveErrorReasonAsync(response)
+                    ErrorReason = await ResolveErrorReasonAsync(connectionRequest.RelativeUri, response)
                 };
             }
             return null;
@@ -180,9 +180,19 @@ namespace RestApiClientBuilder.Core.Providers
             return response;
         }
 
-        private async Task<string> ResolveErrorReasonAsync(HttpResponseMessage response)
+        private async Task<string> ResolveErrorReasonAsync(Uri requestUri, HttpResponseMessage response)
         {
-            return !response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : null;
+            if (!response.IsSuccessStatusCode)
+            {
+                if (response.Content.Headers.ContentLength == 0)
+                {
+                    return $"{response.ReasonPhrase} - {requestUri}";
+                }
+
+                return await response.Content.ReadAsStringAsync();
+            }
+
+            return null;
         }
     }
 }

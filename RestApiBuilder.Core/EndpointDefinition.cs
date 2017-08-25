@@ -101,7 +101,7 @@ namespace RestApiClientBuilder.Core
         {
             if (string.IsNullOrWhiteSpace(type?.Namespace)) return true;
 
-            if (type.Namespace.StartsWith("System.") || type.Namespace.StartsWith("Microsoft."))
+            if (type.Namespace.StartsWith("System.") || type.Namespace.Equals("System") || type.Namespace.StartsWith("Microsoft."))
             {
                 return true;
             }
