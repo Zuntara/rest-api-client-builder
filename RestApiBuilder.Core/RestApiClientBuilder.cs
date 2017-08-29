@@ -152,6 +152,11 @@ namespace RestApiClientBuilder.Core
 
             public async Task<RestApiCallResult> ExecuteAsync(CancellationTokenSource cancellationTokenSource)
             {
+                if (cancellationTokenSource == null)
+                {
+                    return await ExecuteAsync();
+                }
+
                 return await ExecuteAsyncInternal(cancellationTokenSource, false);
             }
 
