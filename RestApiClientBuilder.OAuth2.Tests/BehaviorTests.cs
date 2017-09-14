@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -128,5 +129,6 @@ namespace RestApiClientBuilder.OAuth2.Tests
 
             Assert.IsTrue(calledOnTimeout);
         }
+
     }
 }

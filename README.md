@@ -115,6 +115,23 @@ Define the description of the call
 
     .From(definition)
 
+Example for Auth0 provider:
+
+	Core.RestApiClientBuilder.Build()
+        .Behavior(Auth0ClientCredentialBehavior.Create(new ClientCredentialSettingsAuth0
+        {
+            ClientId = "myVerySpecialClientId",
+            ClientSecret = "myVerySpecialClientSecret",
+            TokenEndpointUri = new Uri("https://something.eu.auth0.com/"),
+            Audience = "http://audiencehost:4545"
+        }))
+        .From(EndpointDefinition.Build(new Uri("http://localhost:4545"), "Users"))
+        .Get()
+        .OnSuccess(c => { /* success handler */ })
+        .OnError(c => { /* error handler */ })
+        .OnTimeout(() => { /* timeout handler */ })
+        .ExecuteAsync();
+
 Define the Method of the call
 
     .Get()
