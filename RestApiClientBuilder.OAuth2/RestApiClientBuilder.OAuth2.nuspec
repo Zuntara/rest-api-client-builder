@@ -22,6 +22,7 @@
       2.1.1   Commented the methods and classes
       2.1.3   Added extra behavior to adjust content-types and content-encodings
       2.1.4.2 Added auth0 client credential behavior
+      2.1.4.3 Added auth0 client credential cache
     </releaseNotes>
 
     <copyright>Copyright 2017 by PeopleWare n.v.</copyright>

@@ -53,24 +53,27 @@ namespace RestApiClientBuilder.OAuth2
 
                     UserAgentClient userAgent = GetUserAgent();
 
-                    AuthenticationApiClient auth0Client = new AuthenticationApiClient(_settings.TokenEndpointUri);
-                    var tokenTask = auth0Client.GetTokenAsync(new ClientCredentialsTokenRequest
+                    if (CachedCredentials == null || DateTime.UtcNow >= CachedCredentials.AccessTokenExpirationUtc)
                     {
-                        Audience = _settings.Audience,
-                        ClientId = _settings.ClientId,
-                        ClientSecret = _settings.ClientSecret
-                    });
-                    tokenTask.Wait();
+                        AuthenticationApiClient auth0Client = new AuthenticationApiClient(_settings.TokenEndpointUri);
+                        var tokenTask = auth0Client.GetTokenAsync(new ClientCredentialsTokenRequest
+                        {
+                            Audience = _settings.Audience,
+                            ClientId = _settings.ClientId,
+                            ClientSecret = _settings.ClientSecret
+                        });
+                        tokenTask.Wait();
 
-                    IAuthorizationState authorizationCode = new AuthorizationState();
-                    authorizationCode.AccessToken = tokenTask.Result.AccessToken;
-                    authorizationCode.AccessTokenExpirationUtc = DateTime.UtcNow.AddSeconds(tokenTask.Result.ExpiresIn);
-                    authorizationCode.AccessTokenIssueDateUtc = DateTime.UtcNow;
-                    authorizationCode.RefreshToken = tokenTask.Result.RefreshToken;
-                    
+                        CachedCredentials = new AuthorizationState();
+                        CachedCredentials.AccessToken = tokenTask.Result.AccessToken;
+                        CachedCredentials.AccessTokenExpirationUtc = DateTime.UtcNow.AddSeconds(tokenTask.Result.ExpiresIn);
+                        CachedCredentials.AccessTokenIssueDateUtc = DateTime.UtcNow;
+                        CachedCredentials.RefreshToken = tokenTask.Result.RefreshToken;
+                    }
+
                     if (provider is IRestConnectionProvider<HttpClient>)
                     {
-                        var client = new HttpClient(userAgent.CreateAuthorizingHandler(authorizationCode));
+                        var client = new HttpClient(userAgent.CreateAuthorizingHandler(CachedCredentials));
                         client.BaseAddress = baseAddress;
                         client.DefaultRequestHeaders.Accept.Clear();
                         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -100,5 +103,7 @@ namespace RestApiClientBuilder.OAuth2
 
             return client;
         }
+
+        internal static IAuthorizationState CachedCredentials { get; set; }
     }
 }
